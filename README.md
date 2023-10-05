@@ -1,14 +1,16 @@
 # Jellygrinder
 
-TODO
+Utility for running HLS and LL-HLS stress-tests against [the Jellyfish Media Server](https://github.com/jellyfish-dev/jellyfish)
 
 ## Installation
 
-TODO
+Make sure to have installed [Elixir](https://elixir-lang.org/install.html) first.
+
+Run `mix deps.get`.
 
 ## Usage
 
-TODO
+Run `mix help lltest` for usage information.
 
 ## Copyright and License
 
