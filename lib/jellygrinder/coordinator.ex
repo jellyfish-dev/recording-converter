@@ -5,6 +5,7 @@ defmodule Jellygrinder.Coordinator do
 
   require Logger
 
+  alias Jellygrinder.Client.{HLS, LLHLS}
   alias Jellygrinder.ClientSupervisor
   alias Jellygrinder.Coordinator.Config
 
@@ -29,7 +30,7 @@ defmodule Jellygrinder.Coordinator do
 
   @impl true
   def init(_args) do
-    Logger.info("Coordinator: Init")
+    Logger.info("Coordinator: Init (pid: #{inspect(self())})")
 
     {:ok, nil}
   end
@@ -43,6 +44,7 @@ defmodule Jellygrinder.Coordinator do
       URL: #{config.url}
       Clients: #{config.clients}
       Time: #{config.time} s
+      Spawn interval: #{config.spawn_interval} ms
       Save results to: #{config.out_path}
     """)
 
@@ -51,11 +53,11 @@ defmodule Jellygrinder.Coordinator do
 
     state = %{
       uri: URI.parse(config.url),
-      clients: config.clients,
+      clients: %{max: config.clients, spawned: 0, alive: 0},
       time: config.time,
       spawn_interval: config.spawn_interval,
       out_path: config.out_path,
-      client_count: 0,
+      ll_hls?: config.ll_hls,
       results: []
     }
 
@@ -68,7 +70,7 @@ defmodule Jellygrinder.Coordinator do
 
     unless r.success do
       Logger.warning(
-        "Coordinator: Request failed (from: #{r.process_name}, label: #{r.label}, code: #{r.response_code})"
+        "Coordinator: Request failed (from: #{r.process_name}, label: #{r.label}, code: #{r.response_code}, reason: #{r.failure_msg})"
       )
     end
 
@@ -76,21 +78,28 @@ defmodule Jellygrinder.Coordinator do
   end
 
   @impl true
-  def handle_info(:spawn_client, %{client_count: max_clients, clients: max_clients} = state) do
+  def handle_info(:spawn_client, %{clients: %{max: max, spawned: max}} = state) do
     {:noreply, state}
   end
 
   @impl true
-  def handle_info(:spawn_client, %{client_count: client_count} = state) do
+  def handle_info(:spawn_client, %{clients: clients, ll_hls?: ll_hls?} = state) do
     Process.send_after(self(), :spawn_client, state.spawn_interval)
-    name = "client-#{client_count}"
+    name = "client-#{clients.spawned + 1}"
 
-    case ClientSupervisor.spawn_client(%{uri: state.uri, name: name}) do
+    client = if ll_hls?, do: LLHLS, else: HLS
+
+    case ClientSupervisor.spawn_client(client, %{uri: state.uri, name: name}) do
       {:ok, pid} ->
         Logger.info("Coordinator: #{name} spawned at #{inspect(pid)}")
         _ref = Process.monitor(pid)
 
-        {:noreply, %{state | client_count: client_count + 1}}
+        clients =
+          clients
+          |> Map.update!(:spawned, &(&1 + 1))
+          |> Map.update!(:alive, &(&1 + 1))
+
+        {:noreply, %{state | clients: clients}}
 
       {:error, reason} ->
         Logger.error("Coordinator: Error spawning #{name}: #{inspect(reason)}")
@@ -120,10 +129,12 @@ defmodule Jellygrinder.Coordinator do
   end
 
   @impl true
-  def handle_info({:DOWN, _ref, :process, pid, reason}, %{client_count: client_count} = state) do
+  def handle_info({:DOWN, _ref, :process, pid, reason}, %{clients: clients} = state) do
     Logger.warning("Coordinator: Child process #{inspect(pid)} died: #{inspect(reason)}")
 
-    {:noreply, %{state | client_count: client_count - 1}}
+    clients = Map.update!(clients, :alive, &(&1 - 1))
+
+    {:noreply, %{state | clients: clients}}
   end
 
   @impl true
@@ -133,7 +144,7 @@ defmodule Jellygrinder.Coordinator do
     {:noreply, state}
   end
 
-  defp amend_result(result, %{client_count: client_count, uri: uri} = _state) do
+  defp amend_result(result, %{clients: %{alive: client_count}, uri: uri} = _state) do
     request_url = uri |> Map.put(:path, result.path) |> URI.to_string()
 
     result
@@ -142,10 +153,20 @@ defmodule Jellygrinder.Coordinator do
   end
 
   defp results_header() do
-    "timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect\n"
+    """
+    timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,\
+    failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+    """
   end
 
   defp serialize_result(r) do
-    "#{r.timestamp},#{r.elapsed},#{r.label},#{r.response_code},,#{r.process_name},,#{r.success},#{r.failure_msg},#{r.bytes},-1,#{r.client_count},#{r.client_count},#{r.url},-1,-1,-1\n"
+    """
+    #{r.timestamp},#{r.elapsed},#{r.label},#{r.response_code},,#{r.process_name},,#{r.success},\
+    #{csv_safe(r.failure_msg)},#{r.bytes},-1,#{r.client_count},#{r.client_count},#{r.url},-1,-1,-1
+    """
+  end
+
+  defp csv_safe(string) do
+    String.replace(string, [",", "\n", "\r"], ";")
   end
 end

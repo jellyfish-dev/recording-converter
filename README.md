@@ -10,7 +10,7 @@ Run `mix deps.get`.
 
 ## Usage
 
-Run `mix help lltest` for usage information.
+Run `mix help grind` for usage information.
 
 ## Copyright and License
 

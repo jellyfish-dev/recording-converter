@@ -13,7 +13,8 @@ defmodule Jellygrinder.Coordinator.Config do
           clients: pos_integer(),
           time: pos_integer(),
           spawn_interval: pos_integer(),
-          out_path: Path.t()
+          out_path: Path.t(),
+          ll_hls: boolean()
         }
 
   defstruct client_config: @default_client_config,
@@ -21,7 +22,8 @@ defmodule Jellygrinder.Coordinator.Config do
             clients: 500,
             time: 300,
             spawn_interval: 200,
-            out_path: "results.csv"
+            out_path: "results.csv",
+            ll_hls: false
 
   @spec fill_hls_url!(t()) :: t() | no_return()
   def fill_hls_url!(%{url: nil} = config) do
