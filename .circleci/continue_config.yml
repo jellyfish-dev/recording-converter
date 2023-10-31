@@ -1,0 +1,51 @@
+version: 2.1
+
+parameters:
+  hls-changed:
+    type: boolean
+    default: false
+
+executors:
+  hls-executor:
+    parameters:
+      mix_env: 
+        type: string
+    resource_class: large
+    docker:
+      - image: membraneframeworklabs/docker_membrane:v2.2.0
+        environment: 
+          MIX_ENV: << parameters.mix_env >>
+    working_directory: ~/app/hls
+
+jobs:
+  lint_hls:
+    executor: 
+      name: hls-executor
+      mix_env: dev
+
+    steps:
+      - checkout:
+          path: ~/app
+      - run: mix deps.get
+      - run: mix format --check-formatted
+      - run: mix compile --force --warnings-as-errors
+      - run: mix credo
+      - run: mix dialyzer
+
+  test_hls:
+    executor: 
+      name: hls-executor
+      mix_env: test
+
+    steps:
+      - checkout:
+          path: ~/app
+      - run: mix deps.get
+      - run: mix test
+
+workflows:
+  build-hls:
+    when: << pipeline.parameters.hls-changed >>
+    jobs:
+      - lint_hls
+      - test_hls

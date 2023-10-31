@@ -1,8 +1,16 @@
-# Jellygrinder
+# Jellygrinder HLS
 
-Utilities for running stress-tests against [the Jellyfish Media Server](https://github.com/jellyfish-dev/jellyfish).
+Utility for running HLS and LL-HLS stress-tests against [the Jellyfish Media Server](https://github.com/jellyfish-dev/jellyfish)
 
-To use a specific utility for testing a particular area, navigate to the corresponding subdirectory.
+## Installation
+
+Make sure to have installed [Elixir](https://elixir-lang.org/install.html) first.
+
+Run `mix deps.get`.
+
+## Usage
+
+Run `mix help grind` for usage information.
 
 ## Copyright and License
 

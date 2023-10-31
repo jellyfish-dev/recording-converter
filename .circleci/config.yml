@@ -1,12 +1,16 @@
 version: 2.1
+
+setup: true
+
 orbs:
-  elixir: membraneframework/elixir@1
+  path-filtering: circleci/path-filtering@1.0.0
 
 workflows:
-  version: 2
-  build:
+  generate-config:
     jobs:
-      - elixir/build_test
-      - elixir/test
-      - elixir/lint:
-          docs: false
+      - path-filtering/filter:
+          name: generate_config
+          base-revision: main
+          config-path: .circleci/continue_config.yml
+          mapping: |
+            hls/.* hls-changed true
