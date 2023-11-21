@@ -5,6 +5,10 @@ parameters:
     type: boolean
     default: false
 
+  webrtc-changed:
+    type: boolean
+    default: false
+
 executors:
   hls-executor:
     parameters:
@@ -16,6 +20,12 @@ executors:
         environment: 
           MIX_ENV: << parameters.mix_env >>
     working_directory: ~/app/hls
+
+  webrtc-executor:
+    resource_class: large
+    docker:
+      - image: node:21-alpine3.17
+    working_directory: ~/app/webrtc
 
 jobs:
   lint_hls:
@@ -43,9 +53,33 @@ jobs:
       - run: mix deps.get
       - run: mix test
 
+  test_webrtc:
+    executor:
+      name: webrtc-executor
+    steps:
+      - checkout:
+          path: ~/app
+      - run: npm run setup
+      - run: npm run grind -- --help
+
+  lint_webrtc:
+    executor: 
+      name: webrtc-executor
+    steps:
+      - checkout:
+          path: ~/app
+      - run: npm run setup
+      - run: npx prettier . --check
+
 workflows:
   build-hls:
     when: << pipeline.parameters.hls-changed >>
     jobs:
       - lint_hls
       - test_hls
+
+  build-webrtc:
+    when: << pipeline.parameters.webrtc-changed >>
+    jobs:
+      - lint_webrtc
+      - test_webrtc

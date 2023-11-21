@@ -14,3 +14,4 @@ workflows:
           config-path: .circleci/continue_config.yml
           mapping: |
             hls/.* hls-changed true
+            webrtc/.* webrtc-changed true

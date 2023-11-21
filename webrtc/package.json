@@ -1,0 +1,24 @@
+{
+  "devDependencies": {
+    "@jellyfish-dev/ts-client-sdk": "^0.2.1",
+    "@types/cli-progress": "^3.11.4",
+    "@types/node": "^20.8.10",
+    "@types/yargs": "^17.0.29",
+    "playwright": "^1.39.0",
+    "prettier": "^3.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0",
+    "yargs": "^17.7.2"
+  },
+  "scripts": {
+    "setup": "npm i && cd frontend && npm i && cd ..",
+    "install-chrome": "npx playwright install chrome",
+    "grind": "npx ts-node index.ts",
+    "format": "npx prettier . --write"
+  },
+  "dependencies": {
+    "catch-exit": "^1.2.2",
+    "cli-progress": "^3.12.0"
+  }
+}
