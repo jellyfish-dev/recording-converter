@@ -52,19 +52,18 @@ defmodule RecordingConverter.Mixfile do
       {:membrane_core, "~> 1.0"},
       {:membrane_aws_plugin, github: "jellyfish-dev/membrane_aws_plugin"},
       {:membrane_stream_plugin, "~> 0.4.0"},
-      {:membrane_rtp_plugin, "~> 0.24.1"},
+      {:membrane_rtp_plugin, "~> 0.27.0"},
       {:membrane_rtp_opus_plugin, "~> 0.9.0"},
       {:membrane_rtp_h264_plugin, "~> 0.19.0"},
       {:membrane_h264_format, "~> 0.6.1"},
       {:membrane_h264_plugin, "~> 0.9.0"},
       {:membrane_aac_plugin, "~> 0.18.0"},
       {:membrane_aac_fdk_plugin, "~> 0.18.5"},
-      {:membrane_opus_plugin, "~> 0.19.3"},
+      {:membrane_opus_plugin, "~> 0.20.0"},
       {:membrane_http_adaptive_stream_plugin, "~> 0.18.2"},
       {:jason, "~> 1.0"},
-
-      # {:membrane_video_compositor_plugin,
-      #  github: "membraneframework/membrane_video_compositor_plugin", branch: "develop"},
+      {:membrane_video_compositor_plugin,
+       github: "membraneframework/membrane_video_compositor_plugin", branch: "develop"},
 
       # aws deps
       {:ex_aws, "~> 2.1"},
