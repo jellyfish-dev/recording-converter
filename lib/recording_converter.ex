@@ -2,8 +2,26 @@ defmodule RecordingConverter do
   require Logger
   use GenServer
 
+  alias ExAws.S3
+
+  @index_file "index.m3u8"
+
+  @spec bucket_name() :: binary()
+  def bucket_name() do
+    Application.fetch_env!(:recording_converter, :bucket_name)
+  end
+
+  @spec output_directory() :: binary()
+  def output_directory() do
+    Application.fetch_env!(:recording_converter, :output_dir_path)
+  end
+
   def start_link(args \\ []) do
     GenServer.start_link(__MODULE__, args)
+  end
+
+  def start(args \\ []) do
+    GenServer.start(__MODULE__, args)
   end
 
   @impl true
@@ -21,13 +39,77 @@ defmodule RecordingConverter do
   end
 
   @impl true
-  def handle_info({:DOWN, _monitor, :process, _pipeline_pid, :normal}, _state) do
-    System.stop(0)
+  def handle_info({:DOWN, _monitor, :process, _pipeline_pid, :normal}, state) do
+    with :ok <- send_files_without_index(),
+         {:ok, objects} <- get_bucket_objects(),
+         objects <- fetch_bucket_objects_name(objects),
+         true <- check_s3_bucket_and_local_equals?([@index_file | objects]),
+         {:ok, _value} <- send_file(@index_file) do
+      terminate(0)
+      {:stop, :normal, state}
+    else
+      _any_error ->
+        terminate(1)
+        {:stop, :error, state}
+    end
   end
 
   @impl true
-  def handle_info({:DOWN, _monitor, :process, _pipeline_pid, reason}, _state) do
+  def handle_info({:DOWN, _monitor, :process, _pipeline_pid, reason}, state) do
     Logger.warning("Recording Converter pipeline is down with reason: #{reason}")
-    System.stop(1)
+    {:stop, :error, state}
+  end
+
+  defp send_files_without_index() do
+    {_succeses, failures} =
+      output_directory()
+      |> File.ls!()
+      |> Enum.reject(&String.ends_with?(&1, @index_file))
+      |> Enum.map(&send_file(&1))
+      |> Enum.split_with(fn
+        {:ok, _value} -> true
+        {:error, _any} -> false
+      end)
+
+    if Enum.empty?(failures) do
+      :ok
+    else
+      Enum.each(failures, fn {:error, error} ->
+        Logger.error("Request failed info: #{inspect(error)}")
+      end)
+
+      :error
+    end
+  end
+
+  defp get_bucket_objects() do
+    bucket_name()
+    |> S3.list_objects(prefix: output_directory())
+    |> ExAws.request()
+  end
+
+  defp fetch_bucket_objects_name(objects) do
+    objects
+    |> Map.fetch!(:body)
+    |> Map.fetch!(:contents)
+    |> Enum.map(&Map.fetch!(&1, :key))
+  end
+
+  defp check_s3_bucket_and_local_equals?(objects) do
+    output_directory() |> File.ls!() |> MapSet.new() == objects |> MapSet.new()
+  end
+
+  defp send_file(file_name) do
+    bucket = bucket_name()
+    file_path = output_directory() <> file_name
+
+    file_path
+    |> S3.Upload.stream_file()
+    |> S3.upload(bucket, file_path)
+    |> ExAws.request()
+  end
+
+  defp terminate(status_code) do
+    Application.fetch_env!(:recording_converter, :terminator).terminate(status_code)
   end
 end

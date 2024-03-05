@@ -5,17 +5,19 @@ defmodule RecordingConverter.Pipeline do
   alias Membrane.HTTPAdaptiveStream.{SinkBin, Storages}
   alias Membrane.Time
 
+  @segment_duration 3
+
   @impl true
   def handle_init(_opts, _args) do
     report =
-      bucket_name()
+      RecordingConverter.bucket_name()
       |> ExAws.S3.download_file(s3_file_path("report.json"), :memory)
       |> ExAws.stream!()
       |> Enum.join("")
 
     report = Jason.decode!(report)
 
-    File.mkdir("tmp")
+    output_directory = RecordingConverter.output_directory()
 
     main_spec = [
       # FIXME: Compositor doesn't compile
@@ -26,7 +28,7 @@ defmodule RecordingConverter.Pipeline do
       # })
       child(:hls_sink_bin, %SinkBin{
         hls_mode: :muxed_av,
-        storage: %Storages.FileStorage{directory: "./tmp"},
+        storage: %Storages.FileStorage{directory: output_directory},
         manifest_module: Membrane.HTTPAdaptiveStream.HLS
       })
     ]
@@ -52,7 +54,7 @@ defmodule RecordingConverter.Pipeline do
 
   defp create_branch(%{"encoding" => "H264"} = track) do
     child({:aws_s3, track.id}, %Source{
-      bucket: bucket_name(),
+      bucket: RecordingConverter.bucket_name(),
       path: s3_file_path("/#{track.id}")
     })
     |> child({:deserializer, track.id}, Membrane.Stream.Deserializer)
@@ -67,7 +69,7 @@ defmodule RecordingConverter.Pipeline do
     |> via_in(Pad.ref(:input, {:video, track.id}),
       options: [
         encoding: :H264,
-        segment_duration: Time.seconds(5)
+        segment_duration: Time.seconds(@segment_duration)
         # segment_duration: state.hls_config.segment_duration,
         # partial_segment_duration: state.hls_config.partial_segment_duration
       ]
@@ -77,7 +79,7 @@ defmodule RecordingConverter.Pipeline do
 
   defp create_branch(%{"encoding" => "OPUS"} = track) do
     child({:aws_s3, track.id}, %Source{
-      bucket: bucket_name(),
+      bucket: RecordingConverter.bucket_name(),
       path: s3_file_path("/#{track.id}")
     })
     |> child({:deserializer, track.id}, Membrane.Stream.Deserializer)
@@ -91,7 +93,7 @@ defmodule RecordingConverter.Pipeline do
     |> via_in(Pad.ref(:input, {:audio, track.id}),
       options: [
         encoding: :AAC,
-        segment_duration: Time.seconds(5)
+        segment_duration: Time.seconds(@segment_duration)
         # partial_segment_duration: state.hls_config.partial_segment_duration
       ]
     )
@@ -103,10 +105,6 @@ defmodule RecordingConverter.Pipeline do
       raise(
         "RecordingConverter support only tracks encoded in OPUS or H264. Received track #{inspect(track)} "
       )
-
-  defp bucket_name() do
-    Application.fetch_env!(:recording_converter, :bucket_name)
-  end
 
   defp s3_file_path(file) do
     Application.fetch_env!(:recording_converter, :input_dir_path) <> file
