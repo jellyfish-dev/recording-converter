@@ -16,6 +16,7 @@ defmodule RecordingConverter.PipelineTest do
   @audio_path @fixtures <> @audio
   @video_path @fixtures <> @video
   @report_path @fixtures <> @report
+  @input_request_path "https://s3.amazonaws.com/bucket/test_path/"
 
   setup_all do
     bucket = Application.fetch_env!(:recording_converter, :bucket_name)
@@ -39,8 +40,6 @@ defmodule RecordingConverter.PipelineTest do
   end
 
   test "one audio, one video is correctly converted", %{
-    bucket: bucket,
-    input_dir_path: input_dir_path,
     output_path: output_dir_path
   } do
     files = %{
@@ -49,7 +48,7 @@ defmodule RecordingConverter.PipelineTest do
       @report => File.read!(@report_path)
     }
 
-    setup_multipart_download_backend(bucket, input_dir_path, files)
+    setup_multipart_download_backend(files)
 
     assert pipeline =
              Pipeline.start_link_supervised!(
@@ -64,16 +63,16 @@ defmodule RecordingConverter.PipelineTest do
     assert_pipeline_output(@referals, output_dir_path)
   end
 
-  def request_handler(request_path, files, fallback \\ nil) do
+  def request_handler(files, fallback \\ nil) do
     fn
-      :head, ^request_path <> file, _req_body, _headers, _http_opts ->
+      :head, @input_request_path <> file, _req_body, _headers, _http_opts ->
         file_body = Map.fetch!(files, file)
 
         content_length = file_body |> byte_size |> to_string
 
         {:ok, %{status_code: 200, headers: %{"Content-Length" => content_length}}}
 
-      :get, ^request_path <> file, _req_body, headers, _http_opts ->
+      :get, @input_request_path <> file, _req_body, headers, _http_opts ->
         file_body = Map.fetch!(files, file)
         headers = Map.new(headers)
 
@@ -109,13 +108,8 @@ defmodule RecordingConverter.PipelineTest do
     end)
   end
 
-  defp setup_multipart_download_backend(
-         bucket_name,
-         dir_path,
-         files
-       ) do
-    request_path = "https://s3.amazonaws.com/#{bucket_name}/#{dir_path}"
-    request_handler = request_handler(request_path, files)
+  defp setup_multipart_download_backend(files) do
+    request_handler = request_handler(files)
 
     expect(ExAws.Request.HttpMock, :request, 9, request_handler)
   end

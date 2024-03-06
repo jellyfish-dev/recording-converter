@@ -18,6 +18,8 @@ defmodule RecordingConverter.RecordingTest do
   @report_path @fixtures <> @report
   @upload_id "upload_id"
   @etag 1
+  @bucket_request_path "https://s3.amazonaws.com/bucket/"
+  @output_request_path "https://s3.amazonaws.com/bucket/output/"
 
   setup_all do
     bucket = Application.fetch_env!(:recording_converter, :bucket_name)
@@ -66,8 +68,6 @@ defmodule RecordingConverter.RecordingTest do
   end
 
   test "uploading to s3 failed", %{
-    bucket: bucket,
-    input_dir_path: input_dir_path,
     output_path: output_dir_path
   } do
     files = %{
@@ -77,7 +77,7 @@ defmodule RecordingConverter.RecordingTest do
     }
 
     setup_terminator(1)
-    setup_s3_upload_failure(bucket, input_dir_path, output_dir_path, files)
+    setup_s3_upload_failure(files)
 
     {:ok, pid} = RecordingConverter.start()
 
@@ -105,10 +105,6 @@ defmodule RecordingConverter.RecordingTest do
          output_path,
          files
        ) do
-    bucket_path = "https://s3.amazonaws.com/#{bucket_name}"
-    request_path = "#{bucket_path}/#{dir_path}"
-    output_request_path = "#{bucket_path}/#{output_path}"
-
     output_prefix = output_path |> String.replace_suffix("/", "")
 
     pid = self()
@@ -116,8 +112,8 @@ defmodule RecordingConverter.RecordingTest do
     {:ok, agent} = Agent.start(fn -> [] end)
 
     request_handler =
-      PipelineTest.request_handler(request_path, files, fn
-        :post, ^output_request_path <> _rest, <<>>, _headers, _http_opts ->
+      PipelineTest.request_handler(files, fn
+        :post, @output_request_path <> _rest, <<>>, _headers, _http_opts ->
           send(pid, :upload_initialized)
 
           {:ok,
@@ -132,7 +128,7 @@ defmodule RecordingConverter.RecordingTest do
              """
            }}
 
-        :post, ^output_request_path <> file_name, _body, _headers, _http_opts ->
+        :post, @output_request_path <> file_name, _body, _headers, _http_opts ->
           send(pid, :upload_completed)
 
           file_name = String.replace_suffix(file_name, "?uploadId=#{@upload_id}", "")
@@ -152,12 +148,12 @@ defmodule RecordingConverter.RecordingTest do
              """
            }}
 
-        :put, ^output_request_path <> "index.m3u8", _body, _headers, _http_opts ->
+        :put, @output_request_path <> "index.m3u8", _body, _headers, _http_opts ->
           send(pid, :index_uploaded)
 
           {:ok, %{status_code: 200}}
 
-        :put, ^output_request_path <> _file_name, _body, _headers, _http_opts ->
+        :put, @output_request_path <> _file_name, _body, _headers, _http_opts ->
           send(pid, :chunk_uploaded)
 
           {:ok,
@@ -166,7 +162,7 @@ defmodule RecordingConverter.RecordingTest do
              headers: %{"ETag" => @etag}
            }}
 
-        :get, ^bucket_path <> _rest, _body, _headers, _http_opts ->
+        :get, @bucket_request_path <> _rest, _body, _headers, _http_opts ->
           contents =
             agent
             |> Agent.get(& &1)
@@ -206,21 +202,9 @@ defmodule RecordingConverter.RecordingTest do
     expect(ExAws.Request.HttpMock, :request, 28, request_handler)
   end
 
-  defp setup_s3_upload_failure(
-         bucket_name,
-         dir_path,
-         _output_path,
-         files
-       ) do
-    bucket_path = "https://s3.amazonaws.com/#{bucket_name}"
-    request_path = "#{bucket_path}/#{dir_path}"
-
+  defp setup_s3_upload_failure(files) do
     request_handler =
-      PipelineTest.request_handler(request_path, files, fn _method,
-                                                           _path,
-                                                           _body,
-                                                           _headers,
-                                                           _opts ->
+      PipelineTest.request_handler(files, fn _method, _path, _body, _headers, _opts ->
         {:ok, %{status_code: 401}}
       end)
 
