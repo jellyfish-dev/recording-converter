@@ -58,7 +58,7 @@ defmodule RecordingConverter.PipelineTest do
 
     monitor_ref = Process.monitor(pipeline)
 
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 5_000
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 15_000
 
     assert_pipeline_output(@referals, output_dir_path)
   end

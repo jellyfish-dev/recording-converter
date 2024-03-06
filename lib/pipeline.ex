@@ -11,6 +11,7 @@ defmodule RecordingConverter.Pipeline do
   @output_height 720
   @video_output_id "video_output_1"
   @audio_output_id "audio_output_1"
+  @output_streams_number 2
 
   @impl true
   def handle_init(_opts, _args) do
@@ -25,7 +26,8 @@ defmodule RecordingConverter.Pipeline do
     output_directory = RecordingConverter.output_directory()
 
     main_spec = [
-      generate_output_video_branch(output_directory)
+      generate_output_video_branch(output_directory),
+      generate_output_audio_branch()
     ]
 
     spec =
@@ -34,7 +36,8 @@ defmodule RecordingConverter.Pipeline do
       |> Enum.map(fn {key, value} -> Map.put(value, :id, key) end)
       |> Enum.map(&create_branch(&1))
 
-    {[spec: main_spec ++ spec], %{}}
+    {[spec: main_spec ++ spec],
+     %{tracks: Enum.count(spec) + @output_streams_number, registered_compositor_streams: 0}}
   end
 
   @impl true
@@ -47,7 +50,7 @@ defmodule RecordingConverter.Pipeline do
       when msg_type == :output_registered or msg_type == :input_registered do
     state = %{state | registered_compositor_streams: state.registered_compositor_streams + 1}
 
-    if state.registered_compositor_streams == 4 do
+    if state.registered_compositor_streams == state.tracks do
       # send start when all inputs are connected
       {[notify_child: {:video_compositor, :start_composing}], state}
     else
@@ -76,12 +79,17 @@ defmodule RecordingConverter.Pipeline do
   end
 
   @impl true
-  def handle_child_notification(:end_of_stream, :hls_sink_bin, _ctx, state) do
+  def handle_child_notification(notification, _other_child, _ctx, state) do
+    {[], state}
+  end
+
+  @impl true
+  def handle_element_end_of_stream(:hls_sink_bin, _pad_ref, _ctx, state) do
     {[terminate: :normal], state}
   end
 
   @impl true
-  def handle_child_notification(_notification, _other_child, _ctx, state) do
+  def handle_element_end_of_stream(element, _pad_ref, _context, state) do
     {[], state}
   end
 
@@ -89,7 +97,9 @@ defmodule RecordingConverter.Pipeline do
     child(:video_compositor, %Membrane.LiveCompositor{
       framerate: {30, 1},
       composing_strategy: :ahead_of_time,
-      init_request: []
+      init_requests: [
+        Compositor.register_shader_request_body()
+      ]
     })
     |> via_out(Pad.ref(:video_output, @video_output_id),
       options: [
@@ -97,12 +107,12 @@ defmodule RecordingConverter.Pipeline do
         width: @output_width,
         height: @output_height,
         initial:
-          scene([
+          Compositor.scene([
             %{type: :input_stream, input_id: "video_input_0", id: "child_0"}
           ])
       ]
     )
-    |> child({:parser, track.id}, %Membrane.H264.Parser{
+    |> child(:output_parser, %Membrane.H264.Parser{
       generate_best_effort_timestamps: %{framerate: {0, 1}},
       output_alignment: :nalu
     })
@@ -157,7 +167,7 @@ defmodule RecordingConverter.Pipeline do
       depayloader: Membrane.RTP.H264.Depayloader,
       clock_rate: track["clock_rate"]
     })
-    |> child(:mp4_input_parser, %Membrane.H264.Parser{
+    |> child({:input_parser, track.id}, %Membrane.H264.Parser{
       output_alignment: :nalu,
       output_stream_structure: :annexb,
       generate_best_effort_timestamps: %{framerate: {0, 1}}
@@ -181,7 +191,7 @@ defmodule RecordingConverter.Pipeline do
       depayloader: Membrane.RTP.Opus.Depayloader,
       clock_rate: track["clock_rate"]
     })
-    |> child(:audio_parser, %Membrane.Opus.Parser{
+    |> child({:audio_parser, track.id}, %Membrane.Opus.Parser{
       generate_best_effort_timestamps?: true
     })
     |> via_in(Pad.ref(:audio_input, "audio_input_0"),
