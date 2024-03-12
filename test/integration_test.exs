@@ -8,14 +8,7 @@ defmodule RecordingConverter.RecordingTest do
   setup :verify_on_exit!
   setup :set_mox_from_context
 
-  @referals "./test/fixtures/referals/"
-  @fixtures "./test/fixtures/recording/"
-  @audio "audio_FC45E6CF26C7683C.msr"
-  @video "video_15D5A19A045095D9.msr"
-  @report "report.json"
-  @audio_path @fixtures <> @audio
-  @video_path @fixtures <> @video
-  @report_path @fixtures <> @report
+  @fixtures "./test/fixtures/"
   @upload_id "upload_id"
   @etag 1
   @bucket_request_path "https://s3.amazonaws.com/bucket/"
@@ -47,11 +40,16 @@ defmodule RecordingConverter.RecordingTest do
     input_dir_path: input_dir_path,
     output_path: output_dir_path
   } do
-    files = %{
-      @audio => File.read!(@audio_path),
-      @video => File.read!(@video_path),
-      @report => File.read!(@report_path)
-    }
+    test_type = "/one-audio-one-video/"
+
+    test_fixtures_path = @fixtures <> test_type
+
+    files =
+      test_fixtures_path
+      |> File.ls!()
+      |> Map.new(fn file_name ->
+        {file_name, File.read!(test_fixtures_path <> file_name)}
+      end)
 
     setup_terminator()
     setup_multipart_download_backend(bucket, input_dir_path, output_dir_path, files)
@@ -62,7 +60,7 @@ defmodule RecordingConverter.RecordingTest do
 
     assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 5_000
 
-    PipelineTest.assert_pipeline_output(@referals, output_dir_path)
+    PipelineTest.assert_pipeline_output(output_dir_path)
 
     assert_received :terminated
   end
@@ -70,11 +68,16 @@ defmodule RecordingConverter.RecordingTest do
   test "uploading to s3 failed", %{
     output_path: output_dir_path
   } do
-    files = %{
-      @audio => File.read!(@audio_path),
-      @video => File.read!(@video_path),
-      @report => File.read!(@report_path)
-    }
+    test_type = "/one-audio-one-video/"
+
+    test_fixtures_path = @fixtures <> test_type
+
+    files =
+      test_fixtures_path
+      |> File.ls!()
+      |> Map.new(fn file_name ->
+        {file_name, File.read!(test_fixtures_path <> file_name)}
+      end)
 
     setup_terminator(1)
     setup_s3_upload_failure(files)
@@ -85,7 +88,7 @@ defmodule RecordingConverter.RecordingTest do
 
     assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :error}, 5_000
 
-    PipelineTest.assert_pipeline_output(@referals, output_dir_path)
+    PipelineTest.assert_pipeline_output(output_dir_path)
 
     assert_received :terminated
   end

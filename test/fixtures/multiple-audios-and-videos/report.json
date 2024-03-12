@@ -1,0 +1,47 @@
+{
+    "recording_id": "id",
+    "tracks": {
+        "audio_3CCDDFFFA6218742.msr": {
+            "offset": 4056416,
+            "type": "audio",
+            "encoding": "OPUS",
+            "metadata": null,
+            "clock_rate": 48000,
+            "start_timestamp": 1700179676,
+            "end_timestamp": 1700662556
+        },
+        "audio_8E0F7F604DECAE70.msr": {
+            "offset": 15540250,
+            "type": "audio",
+            "encoding": "OPUS",
+            "metadata": null,
+            "clock_rate": 48000,
+            "start_timestamp": 3058820753,
+            "end_timestamp": 3059303633
+        },
+        "video_BF757A72BA7EDB26.msr": {
+            "offset": 11461916,
+            "type": "video",
+            "encoding": "H264",
+            "metadata": {
+                "isScreenSharing": false,
+                "mainPresenter": true
+            },
+            "clock_rate": 90000,
+            "start_timestamp": 3267448554,
+            "end_timestamp": 3268347054
+        },
+        "video_CD3260824CEA7E32.msr": {
+            "offset": 0,
+            "type": "video",
+            "encoding": "H264",
+            "metadata": {
+                "isScreenSharing": false,
+                "mainPresenter": true
+            },
+            "clock_rate": 90000,
+            "start_timestamp": 4027904908,
+            "end_timestamp": 4028803408
+        }
+    }
+}
