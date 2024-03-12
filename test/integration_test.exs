@@ -169,7 +169,7 @@ defmodule RecordingConverter.RecordingTest do
           contents =
             agent
             |> Agent.get(& &1)
-            |> Enum.map(fn file ->
+            |> Enum.map_join(fn file ->
               """
               <Contents>
               <Key>#{file}</Key>
@@ -183,7 +183,6 @@ defmodule RecordingConverter.RecordingTest do
               </Contents>
               """
             end)
-            |> Enum.join()
 
           body = """
           <ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">

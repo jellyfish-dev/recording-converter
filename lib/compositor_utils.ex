@@ -1,10 +1,8 @@
 defmodule RecordingConverter.Compositor do
   @moduledoc false
 
-  @shader_id "shader_1"
   @output_width 1280
   @output_height 720
-  @shader_path "./lib/example_shader.wgsl"
   @video_output_id "video_output_1"
   @audio_output_id "audio_output_1"
 
@@ -24,16 +22,10 @@ defmodule RecordingConverter.Compositor do
     }
   end
 
-  def register_shader_request_body() do
-    %{
-      type: :register,
-      entity_type: :shader,
-      shader_id: @shader_id,
-      source: File.read!(@shader_path)
-    }
-  end
-
+  @spec audio_output_id() :: String.t()
   def audio_output_id(), do: @audio_output_id
+
+  @spec video_output_id() :: String.t()
   def video_output_id(), do: @video_output_id
 
   @spec generate_output_update(String.t(), list(), number()) :: tuple()
@@ -66,6 +58,7 @@ defmodule RecordingConverter.Compositor do
     }
   end
 
+  @spec schedule_unregister_video_output(number()) :: {:lc_request, map()}
   def schedule_unregister_video_output(schedule_time_ns),
     do: {
       :lc_request,
@@ -77,6 +70,7 @@ defmodule RecordingConverter.Compositor do
       }
     }
 
+  @spec schedule_unregister_audio_output(number()) :: {:lc_request, map()}
   def schedule_unregister_audio_output(schedule_time_ns),
     do: {
       :lc_request,

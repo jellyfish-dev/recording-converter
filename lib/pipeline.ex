@@ -1,4 +1,5 @@
 defmodule RecordingConverter.Pipeline do
+  @moduledoc false
   use Membrane.Pipeline
 
   require Logger

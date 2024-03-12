@@ -1,6 +1,7 @@
 defmodule RecordingConverter do
-  require Logger
+  @moduledoc false
   use GenServer
+  require Logger
 
   alias ExAws.S3
 
@@ -16,10 +17,12 @@ defmodule RecordingConverter do
     Application.fetch_env!(:recording_converter, :output_dir_path)
   end
 
+  @spec start_link(list()) :: GenServer.on_start()
   def start_link(args \\ []) do
     GenServer.start_link(__MODULE__, args)
   end
 
+  @spec start(list()) :: GenServer.on_start()
   def start(args \\ []) do
     GenServer.start(__MODULE__, args)
   end

@@ -1,4 +1,5 @@
 defmodule RecordingConverter.PipelineTest do
+  @moduledoc false
   use ExUnit.Case
 
   import Mox
@@ -11,6 +12,8 @@ defmodule RecordingConverter.PipelineTest do
   @fixtures "./test/fixtures"
   @input_request_path "https://s3.amazonaws.com/bucket/test_path/"
   @index_name "index.m3u8"
+
+  @type fallback_func_t :: (atom(), String.t(), map(), map(), Keyword.t() -> {atom(), map()})
 
   setup_all do
     bucket = Application.fetch_env!(:recording_converter, :bucket_name)
@@ -91,6 +94,10 @@ defmodule RecordingConverter.PipelineTest do
     assert_pipeline_output(output_dir_path)
   end
 
+  @spec request_handler(
+          files :: [String.t()],
+          fallback :: nil | fallback_func_t()
+        ) :: {atom(), map()}
   def request_handler(files, fallback \\ nil) do
     fn
       :head, @input_request_path <> file, _req_body, _headers, _http_opts ->
@@ -121,6 +128,7 @@ defmodule RecordingConverter.PipelineTest do
     end
   end
 
+  @spec assert_pipeline_output(String.t()) :: no_return()
   def assert_pipeline_output(output_dir_path) do
     index_file = assert_file_exist!(@index_name, output_dir_path)
 

@@ -5,6 +5,7 @@ defmodule RecordingConverter.Terminator do
 
   @callback terminate(status_code :: non_neg_integer()) :: :ok
 
+  @spec terminate(number()) :: :ok
   def terminate(status_code) do
     System.stop(status_code)
   end
