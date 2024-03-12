@@ -56,7 +56,8 @@ defmodule RecordingConverter do
 
   @impl true
   def handle_info({:DOWN, _monitor, :process, _pipeline_pid, reason}, state) do
-    Logger.warning("Recording Converter pipeline is down with reason: #{reason}")
+    Logger.warning("Recording Converter pipeline is down with reason: #{inspect(reason)}")
+    # terminate(1)
     {:stop, :error, state}
   end
 

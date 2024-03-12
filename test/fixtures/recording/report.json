@@ -1,22 +1,26 @@
 {
+  "recording_id": "id",
   "tracks": {
-    "audio_220980017A897F34.msr": {
-      "offset": 1330125,
+    "audio_FC45E6CF26C7683C.msr": {
+      "offset": 3445500,
       "type": "audio",
-      "metadata": null,
       "encoding": "OPUS",
-      "clock_rate": 48000
+      "metadata": null,
+      "start_timestamp": 3620631514,
+      "clock_rate": 48000,
+      "end_timestamp": 3621114394
     },
-    "video_3215165F9072CF66.msr": {
+    "video_15D5A19A045095D9.msr": {
       "offset": 0,
       "type": "video",
+      "encoding": "H264",
       "metadata": {
         "isScreenSharing": false,
         "mainPresenter": true
       },
-      "encoding": "H264",
-      "clock_rate": 90000
+      "start_timestamp": 3257040625,
+      "clock_rate": 90000,
+      "end_timestamp": 3257939125
     }
-  },
-  "recording_id": "id"
+  }
 }
