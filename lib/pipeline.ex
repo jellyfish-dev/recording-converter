@@ -150,7 +150,6 @@ defmodule RecordingConverter.Pipeline do
 
   @impl true
   def handle_element_end_of_stream(:hls_sink_bin, _pad, _context, state) do
-    IO.inspect(:terminate, label: :WTF)
     {[], state}
   end
 
