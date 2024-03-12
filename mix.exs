@@ -60,7 +60,7 @@ defmodule RecordingConverter.Mixfile do
       {:membrane_aac_plugin, "~> 0.18.0"},
       {:membrane_aac_fdk_plugin, "~> 0.18.5"},
       {:membrane_opus_plugin, "~> 0.20.0"},
-      {:membrane_http_adaptive_stream_plugin, "~> 0.18.2"},
+      {:membrane_http_adaptive_stream_plugin, "~> 0.18.3"},
       {:jason, "~> 1.0"},
       {:membrane_video_compositor_plugin,
        github: "membraneframework/membrane_video_compositor_plugin"},

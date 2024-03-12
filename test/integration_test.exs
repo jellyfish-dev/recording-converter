@@ -10,8 +10,8 @@ defmodule RecordingConverter.RecordingTest do
 
   @referals "./test/fixtures/referals/"
   @fixtures "./test/fixtures/recording/"
-  @audio "audio_220980017A897F34.msr"
-  @video "video_3215165F9072CF66.msr"
+  @audio "audio_FC45E6CF26C7683C.msr"
+  @video "video_15D5A19A045095D9.msr"
   @report "report.json"
   @audio_path @fixtures <> @audio
   @video_path @fixtures <> @video
@@ -199,7 +199,7 @@ defmodule RecordingConverter.RecordingTest do
           {:ok, %{status_code: 200, body: body}}
       end)
 
-    expect(ExAws.Request.HttpMock, :request, 28, request_handler)
+    expect(ExAws.Request.HttpMock, :request, 26, request_handler)
   end
 
   defp setup_s3_upload_failure(files) do
