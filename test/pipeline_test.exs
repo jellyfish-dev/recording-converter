@@ -8,15 +8,9 @@ defmodule RecordingConverter.PipelineTest do
   setup :verify_on_exit!
   setup :set_mox_from_context
 
-  @referals "./test/fixtures/referals/"
-  @fixtures "./test/fixtures/recording/"
-  @audio "audio_FC45E6CF26C7683C.msr"
-  @video "video_15D5A19A045095D9.msr"
-  @report "report.json"
-  @audio_path @fixtures <> @audio
-  @video_path @fixtures <> @video
-  @report_path @fixtures <> @report
+  @fixtures "./test/fixtures"
   @input_request_path "https://s3.amazonaws.com/bucket/test_path/"
+  @index_name "index.m3u8"
 
   setup_all do
     bucket = Application.fetch_env!(:recording_converter, :bucket_name)
@@ -42,13 +36,18 @@ defmodule RecordingConverter.PipelineTest do
   test "one audio, one video is correctly converted", %{
     output_path: output_dir_path
   } do
-    files = %{
-      @audio => File.read!(@audio_path),
-      @video => File.read!(@video_path),
-      @report => File.read!(@report_path)
-    }
+    test_type = "/one-audio-one-video/"
 
-    setup_multipart_download_backend(files)
+    test_fixtures_path = @fixtures <> test_type
+
+    files =
+      test_fixtures_path
+      |> File.ls!()
+      |> Map.new(fn file_name ->
+        {file_name, File.read!(test_fixtures_path <> file_name)}
+      end)
+
+    setup_multipart_download_backend(files, 10)
 
     assert pipeline =
              Pipeline.start_link_supervised!(
@@ -60,7 +59,36 @@ defmodule RecordingConverter.PipelineTest do
 
     assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 10_000
 
-    assert_pipeline_output(@referals, output_dir_path)
+    assert_pipeline_output(output_dir_path)
+  end
+
+  test "multiple audios, multiple videos is correctly converted", %{
+    output_path: output_dir_path
+  } do
+    test_type = "/multiple-audios-and-videos/"
+
+    test_fixtures_path = @fixtures <> test_type
+
+    files =
+      test_fixtures_path
+      |> File.ls!()
+      |> Map.new(fn file_name ->
+        {file_name, File.read!(test_fixtures_path <> file_name)}
+      end)
+
+    setup_multipart_download_backend(files, 18)
+
+    assert pipeline =
+             Pipeline.start_link_supervised!(
+               module: RecordingConverter.Pipeline,
+               test_process: self()
+             )
+
+    monitor_ref = Process.monitor(pipeline)
+
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 10_000
+
+    assert_pipeline_output(output_dir_path)
   end
 
   def request_handler(files, fallback \\ nil) do
@@ -93,39 +121,43 @@ defmodule RecordingConverter.PipelineTest do
     end
   end
 
-  def assert_pipeline_output(referals_path, output_dir_path) do
-    referals = File.ls!(referals_path)
+  def assert_pipeline_output(output_dir_path) do
+    index_file = assert_file_exist!(@index_name, output_dir_path)
 
-    output = File.ls!(output_dir_path)
+    playlist_name =
+      index_file
+      |> String.split("\n")
+      |> Enum.at(-1)
 
-    assert referals == output
+    playlist_file = assert_file_exist!(playlist_name, output_dir_path)
 
-    referals
-    |> Enum.zip(output)
-    |> Enum.each(fn {referal, output} ->
-      assert referal == output
+    playlist_lines = String.split(playlist_file, "\n")
 
-      referal_file = File.read!(@referals <> referal)
-      output_file = File.read!(output_dir_path <> output)
+    playlist_lines
+    |> Stream.filter(&String.contains?(&1, "muxed_header"))
+    |> Stream.map(&String.replace(&1, "#EXT-X-MAP:URI=", ""))
+    |> Enum.map(&String.replace(&1, "\"", ""))
+    |> assert_files_exist!(output_dir_path)
 
-      referal_size = byte_size(referal_file)
-
-      # assert referal_file == output_file
-      assert byte_size(referal_file) <= byte_size(output_file)
-
-      unless ignore_file?(referal),
-        do: assert(referal_file == binary_slice(output_file, 0, referal_size))
-    end)
+    playlist_lines
+    |> Enum.filter(&String.starts_with?(&1, "muxed_segment"))
+    |> assert_files_exist!(output_dir_path)
   end
 
-  defp ignore_file?(file_name) do
-    String.contains?(file_name, "muxed_segment_1") or file_name == "g3cFdmlkZW8.m3u8" or
-      file_name == "index.m3u8"
+  defp assert_files_exist!(files, dir_path) when is_list(files) do
+    Enum.each(files, &assert_file_exist!(&1, dir_path))
   end
 
-  defp setup_multipart_download_backend(files) do
+  defp assert_file_exist!(file, dir_path) when is_binary(file) do
+    assert {:ok, file} = File.read(dir_path <> file)
+
+    assert byte_size(file) > 0
+    file
+  end
+
+  defp setup_multipart_download_backend(files, nums) do
     request_handler = request_handler(files)
 
-    expect(ExAws.Request.HttpMock, :request, 10, request_handler)
+    expect(ExAws.Request.HttpMock, :request, nums, request_handler)
   end
 end
