@@ -7,6 +7,9 @@ ARG USERNAME=compositor
 ARG RUST_VERSION=1.74
 
 ENV DEBIAN_FRONTEND=noninteractive
+# Set locale to UTF-8
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 
 RUN apt-get update -y -qq && \
   apt-get install -y \
@@ -23,7 +26,11 @@ WORKDIR /root/project
 
 RUN source ~/.cargo/env && cargo build --release --no-default-features
 
-FROM membraneframeworklabs/docker_membrane AS build_elixir
+FROM membraneframeworklabs/docker_membrane:latest AS build_elixir
+
+# Set locale to UTF-8
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -37,7 +44,24 @@ RUN apt-get update \
   ffmpeg \
   clang-format \
   libopus-dev \
-  pkgconf
+  pkgconf \
+  libssl-dev \
+  libflac-dev \
+  libmad0-dev \
+  libopus-dev \
+  libsdl2-dev \
+  portaudio19-dev \
+  libsrtp2-dev \
+  libmp3lame-dev \
+  libva-dev \
+  libvdpau-dev \
+  libvorbis-dev \
+  libxcb1-dev \
+  libxcb-shm0-dev \
+  libxcb-xfixes0-dev \
+  libx264-dev \
+  libfreetype-dev \
+  libx265-dev
 
 WORKDIR /app
 
@@ -53,7 +77,6 @@ COPY config config
 COPY lib lib
 
 RUN mix deps.get
-RUN mix setup
 RUN mix deps.compile
 
 # compile and build release
@@ -66,6 +89,10 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility
+
+# Set locale to UTF-8
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 
 RUN apt-get update -y -qq && \
   apt-get install -y \
@@ -99,9 +126,11 @@ RUN apt remove build-essential -y \
   wget \
   && apt autoremove -y
 
-
 WORKDIR /app
 
 COPY --from=build_elixir /app/_build/prod/rel/recording_converter ./
+
+RUN mkdir output
+
 
 CMD ["bin/recording_converter", "start"]
