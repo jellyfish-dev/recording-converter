@@ -56,7 +56,7 @@ defmodule RecordingConverter.Mixfile do
       {:membrane_rtp_opus_plugin, "~> 0.9.0"},
       {:membrane_rtp_h264_plugin, "~> 0.19.0"},
       {:membrane_h264_format, "~> 0.6.1"},
-      {:membrane_h264_plugin, "~> 0.9.0"},
+      {:membrane_h26x_plugin, "~> 0.10.0"},
       {:membrane_aac_plugin, "~> 0.18.0"},
       {:membrane_aac_fdk_plugin, "~> 0.18.5"},
       {:membrane_opus_plugin, "~> 0.20.0"},

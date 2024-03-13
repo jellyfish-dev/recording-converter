@@ -23,12 +23,46 @@ WORKDIR /root/project
 
 RUN source ~/.cargo/env && cargo build --release --no-default-features
 
+FROM membraneframeworklabs/docker_membrane AS build_elixir
+
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+  npm \
+  git \
+  python3 \
+  make \
+  cmake \
+  libssl-dev \
+  libsrtp2-dev \
+  ffmpeg \
+  clang-format \
+  libopus-dev \
+  pkgconf
+
+WORKDIR /app
+
+RUN mix local.hex --force && \
+  mix local.rebar --force
+
+# set build ENV
+ENV MIX_ENV=prod
+
+# install mix dependencies
+COPY mix.exs mix.lock ./
+COPY config config
+COPY lib lib
+
+RUN mix deps.get
+RUN mix setup
+RUN mix deps.compile
+
+# compile and build release
+RUN mix do compile, release
+
 # Runtime image
 FROM ubuntu:mantic-20231011
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-ARG USERNAME=compositor
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility
@@ -38,15 +72,36 @@ RUN apt-get update -y -qq && \
   sudo adduser ffmpeg && \
   rm -rf /var/lib/apt/lists/*
 
-RUN useradd -ms /bin/bash $USERNAME && adduser $USERNAME sudo
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-USER $USERNAME
-RUN mkdir -p /home/$USERNAME/video_compositor
-WORKDIR /home/$USERNAME/video_compositor
-
-COPY --from=builder --chown=$USERNAME:$USERNAME /root/project/target/release/main_process /home/$USERNAME/video_compositor/main_process
-
 ENV LIVE_COMPOSITOR_WEB_RENDERER_ENABLE=0
 ENV LIVE_COMPOSITOR_WEB_RENDERER_GPU_ENABLE=0
 
-ENTRYPOINT ["/home/compositor/video_compositor/main_process"]
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+  openssl \
+  libncurses5-dev \
+  libncursesw5-dev \
+  libsrtp2-dev \
+  ffmpeg \
+  clang-format \
+  curl \
+  wget \
+  build-essential
+
+RUN cd /tmp/ \
+  && wget https://downloads.sourceforge.net/opencore-amr/fdk-aac-2.0.0.tar.gz \
+  && tar -xf fdk-aac-2.0.0.tar.gz && cd fdk-aac-2.0.0 \
+  && ./configure --prefix=/usr --disable-static \
+  && make && make install \
+  && cd / \
+  && rm -rf /tmp/*
+
+RUN apt remove build-essential -y \
+  wget \
+  && apt autoremove -y
+
+
+WORKDIR /app
+
+COPY --from=build_elixir /app/_build/prod/rel/recording_converter ./
+
+CMD ["bin/recording_converter", "start"]
