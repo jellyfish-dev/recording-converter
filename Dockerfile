@@ -78,7 +78,6 @@ ENV MIX_ENV=prod
 COPY mix.exs mix.lock ./
 COPY config config
 COPY lib lib
-COPY --from=builder /root/project/target/release priv
 
 RUN ls priv
 
