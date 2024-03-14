@@ -79,7 +79,6 @@ COPY mix.exs mix.lock ./
 COPY config config
 COPY lib lib
 
-RUN ls priv
 
 RUN mix deps.get
 RUN mix deps.compile
