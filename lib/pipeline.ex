@@ -175,7 +175,7 @@ defmodule RecordingConverter.Pipeline do
     })
     |> via_out(Pad.ref(:video_output, Compositor.video_output_id()),
       options: [
-        encoder_preset: :ultrafast,
+        encoder_preset: :slow,
         width: @output_width,
         height: @output_height,
         initial:
