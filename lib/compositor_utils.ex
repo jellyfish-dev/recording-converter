@@ -6,6 +6,17 @@ defmodule RecordingConverter.Compositor do
   @video_output_id "video_output_1"
   @audio_output_id "audio_output_1"
 
+  @spec server_setup() :: :start_locally | {:start_locally, String.t()}
+  def server_setup() do
+    compositor_path = RecordingConverter.compositor_path()
+
+    if is_nil(compositor_path) do
+      :start_locally
+    else
+      {:start_locally, compositor_path}
+    end
+  end
+
   @spec scene(any()) :: map()
   def scene(children) do
     %{

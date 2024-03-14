@@ -170,7 +170,8 @@ defmodule RecordingConverter.Pipeline do
   defp generate_output_video_branch() do
     child(:video_compositor, %Membrane.LiveCompositor{
       framerate: {30, 1},
-      composing_strategy: :ahead_of_time
+      composing_strategy: :ahead_of_time,
+      server_setup: Compositor.server_setup()
     })
     |> via_out(Pad.ref(:video_output, Compositor.video_output_id()),
       options: [

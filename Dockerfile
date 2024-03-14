@@ -21,7 +21,10 @@ RUN apt-get update -y -qq && \
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 RUN source ~/.cargo/env && rustup install $RUST_VERSION && rustup default $RUST_VERSION
 
-COPY . /root/project
+RUN git clone https://github.com/membraneframework/video_compositor.git && cd video_compositor && git checkout 7d0a8be312de17043aebdbcea19b43a3ce1138eb
+
+RUN mv video_compositor /root/project
+
 WORKDIR /root/project
 
 RUN source ~/.cargo/env && cargo build --release --no-default-features
@@ -75,6 +78,9 @@ ENV MIX_ENV=prod
 COPY mix.exs mix.lock ./
 COPY config config
 COPY lib lib
+COPY --from=builder /root/project/target/release priv
+
+RUN ls priv
 
 RUN mix deps.get
 RUN mix deps.compile
@@ -84,6 +90,8 @@ RUN mix do compile, release
 
 # Runtime image
 FROM ubuntu:mantic-20231011
+
+ENV COMPOSITOR_PATH=/app/compositor/video_compositor
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -129,6 +137,7 @@ RUN apt remove build-essential -y \
 WORKDIR /app
 
 COPY --from=build_elixir /app/_build/prod/rel/recording_converter ./
+COPY --from=builder /root/project/target/release compositor
 
 RUN mkdir output
 

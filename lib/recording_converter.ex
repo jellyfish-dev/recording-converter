@@ -7,6 +7,11 @@ defmodule RecordingConverter do
 
   @index_file "index.m3u8"
 
+  @spec compositor_path() :: binary() | nil
+  def compositor_path() do
+    Application.fetch_env!(:recording_converter, :compositor_path)
+  end
+
   @spec bucket_name() :: binary()
   def bucket_name() do
     Application.fetch_env!(:recording_converter, :bucket_name)
