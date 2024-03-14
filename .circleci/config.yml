@@ -14,7 +14,6 @@ jobs:
       - checkout
       - run:
           name: Build Docker image
-          command: docker build --target build_elixir -t build:latest .
 
   test:   # test job is defined here
     executor: my-custom-executor
