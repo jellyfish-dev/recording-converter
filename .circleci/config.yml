@@ -2,6 +2,32 @@ version: 2.1
 orbs:
   elixir: membraneframework/elixir@1
 
+executors:
+  my-custom-executor:
+    docker:
+      - image: build:latest
+
+jobs:
+  build-docker:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build Docker image
+          command: docker build --target build_elixir -t build:latest .
+
+  test:   # test job is defined here
+    executor: my-custom-executor
+    steps:
+      - setup_remote_docker
+      - checkout
+      - run: mix deps.get
+      - run: mix compile
+      - run: mix test --warnings-as-errors
+
+
+
+
 workflows:
   version: 2
   build:
@@ -10,9 +36,11 @@ workflows:
           filters: &filters
             tags:
               only: /v.*/
-      - elixir/test:
-          filters:
-            <<: *filters
+      - build-docker
+      - test:
+          requires:
+            - build-docker
+
       - elixir/lint:
           filters:
             <<: *filters
