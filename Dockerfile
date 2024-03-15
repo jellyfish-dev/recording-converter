@@ -29,7 +29,7 @@ WORKDIR /root/project
 
 RUN source ~/.cargo/env && cargo build --release --no-default-features
 
-FROM membraneframeworklabs/docker_membrane:latest AS build_elixir
+FROM elixir:1.16.2-otp-25 AS build_elixir
 
 # Set locale to UTF-8
 ENV LANG C.UTF-8
@@ -65,6 +65,14 @@ RUN apt-get update \
   libx264-dev \
   libfreetype-dev \
   libx265-dev
+
+RUN cd /tmp/ \
+  && wget https://downloads.sourceforge.net/opencore-amr/fdk-aac-2.0.0.tar.gz \
+  && tar -xf fdk-aac-2.0.0.tar.gz && cd fdk-aac-2.0.0 \
+  && ./configure --prefix=/usr --disable-static \
+  && make && make install \
+  && cd / \
+  && rm -rf /tmp/*
 
 WORKDIR /app
 

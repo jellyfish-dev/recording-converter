@@ -1,9 +1,9 @@
-name: Build and publish Docker CI image for arm
+name: Build and publish Docker CI image
 
 on:
   push:
     tags:
-      - "ci.v.*.*.*"
+      - "ci.v*.*.*"
 
 env:
   REGISTRY: ghcr.io
@@ -28,14 +28,20 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Prepare Docker Tag
+        id: preparetag
+        run: |
+          TAG=$(git describe --tags)
+          PREFIX=$(echo "$TAG" | cut -d. -f1)
+          VERSION=$(echo "$TAG" | cut -d. -f2- | tr '.' '-')
+          DOCKER_TAG="$PREFIX-$VERSION"
+          echo "DOCKER_TAG=$DOCKER_TAG" >> $GITHUB_ENV
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=edge,branch=master
+          tags: ${{env.DOCKER_TAG}}
       - name: Set short sha
         shell: bash
         run: |
@@ -68,14 +74,20 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Prepare Docker Tag
+        id: preparetag
+        run: |
+          TAG=$(git describe --tags)
+          PREFIX=$(echo "$TAG" | cut -d. -f1)
+          VERSION=$(echo "$TAG" | cut -d. -f2- | tr '.' '-')
+          DOCKER_TAG="$PREFIX-$VERSION"
+          echo "DOCKER_TAG=$DOCKER_TAG" >> $GITHUB_ENV
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=edge,branch=master
+          tags: ${{env.DOCKER_TAG}}
       - name: Set short sha
         shell: bash
         run: |
