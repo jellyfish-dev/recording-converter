@@ -29,8 +29,9 @@ WORKDIR /root/project
 
 RUN source ~/.cargo/env && cargo build --release --no-default-features
 
-FROM elixir:1.16.2-otp-25 AS build_elixir
-
+# FROM elixir:1.16.2-otp-25 AS build_elixir
+# FROM cimg/elixir:1.16.0-erlang-26.2.1 AS build_elixir
+FROM membraneframeworklabs/docker_membrane:latest as build_elixir
 # Set locale to UTF-8
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
@@ -43,7 +44,6 @@ RUN apt-get update \
   cmake \
   libssl-dev \
   libsrtp2-dev \
-  ffmpeg \
   clang-format \
   libopus-dev \
   pkgconf \
@@ -66,19 +66,13 @@ RUN apt-get update \
   libx265-dev \
   libavutil-dev
 
-RUN cd /tmp/ \
-  && wget https://downloads.sourceforge.net/opencore-amr/fdk-aac-2.0.0.tar.gz \
-  && tar -xf fdk-aac-2.0.0.tar.gz && cd fdk-aac-2.0.0 \
-  && ./configure --prefix=/usr --disable-static \
-  && make && make install \
-  && cd / \
-  && rm -rf /tmp/*
-
-ENV COMPOSITOR_PATH=/app/compositor/video_compositor
 
 WORKDIR /app
 
-COPY --from=builder /root/project/target/release compositor
+ENV DEBIAN_FRONTEND=noninteractive
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility
+ENV LIVE_COMPOSITOR_WEB_RENDERER_ENABLE=0
+ENV LIVE_COMPOSITOR_WEB_RENDERER_GPU_ENABLE=0
 
 
 RUN mix local.hex --force && \
@@ -148,6 +142,7 @@ RUN apt remove build-essential -y \
 WORKDIR /app
 
 COPY --from=build_elixir /app/_build/prod/rel/recording_converter ./
+COPY --from=builder /root/project/target/release compositor
 
 RUN mkdir output
 
