@@ -5,7 +5,7 @@ orbs:
 executors:
   docker-executor:
     docker:
-      - image: ghcr.io/jellyfish-dev/recording-converter-test:ci-v0-0-1
+      - image: ghcr.io/jellyfish-dev/recording-converter-test:0.0.1
 
 jobs:
   test:   # test job is defined here
