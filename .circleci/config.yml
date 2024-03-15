@@ -6,6 +6,8 @@ executors:
   docker-executor:
     docker:
       - image: ghcr.io/jellyfish-dev/recording-converter-test:0.0.1
+        environment:
+          MIX_ENV: test
 
 jobs:
   test:   # test job is defined here
