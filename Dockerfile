@@ -37,7 +37,6 @@ ENV LC_ALL C.UTF-8
 
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-  npm \
   git \
   python3 \
   make \
@@ -64,7 +63,8 @@ RUN apt-get update \
   libxcb-xfixes0-dev \
   libx264-dev \
   libfreetype-dev \
-  libx265-dev
+  libx265-dev \
+  libavutil-dev
 
 RUN cd /tmp/ \
   && wget https://downloads.sourceforge.net/opencore-amr/fdk-aac-2.0.0.tar.gz \
@@ -74,7 +74,12 @@ RUN cd /tmp/ \
   && cd / \
   && rm -rf /tmp/*
 
+ENV COMPOSITOR_PATH=/app/compositor/video_compositor
+
 WORKDIR /app
+
+COPY --from=builder /root/project/target/release compositor
+
 
 RUN mix local.hex --force && \
   mix local.rebar --force
@@ -143,7 +148,6 @@ RUN apt remove build-essential -y \
 WORKDIR /app
 
 COPY --from=build_elixir /app/_build/prod/rel/recording_converter ./
-COPY --from=builder /root/project/target/release compositor
 
 RUN mkdir output
 
