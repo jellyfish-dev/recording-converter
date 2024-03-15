@@ -13,12 +13,14 @@ defmodule RecordingConverter.Pipeline do
   @output_width 1280
   @output_height 720
   @output_streams_number 2
-
+  @report_file "report.json"
   @delta_timestamp_milliseconds 100
 
   @impl true
   def handle_init(_opts, _args) do
     output_directory = RecordingConverter.output_directory()
+
+    File.mkdir_p!(output_directory)
 
     main_spec = [
       generate_sink_bin(output_directory),
@@ -33,7 +35,7 @@ defmodule RecordingConverter.Pipeline do
   def handle_setup(_ctx, _state) do
     report =
       RecordingConverter.bucket_name()
-      |> ExAws.S3.download_file(s3_file_path("report.json"), :memory)
+      |> ExAws.S3.download_file(s3_file_path(@report_file), :memory)
       |> ExAws.stream!()
       |> Enum.join("")
 
@@ -276,7 +278,7 @@ defmodule RecordingConverter.Pipeline do
       )
 
   defp s3_file_path(file) do
-    Application.fetch_env!(:recording_converter, :input_dir_path) <> file
+    Path.join(RecordingConverter.s3_directory(), file)
   end
 
   defp notify_compositor(notification) do

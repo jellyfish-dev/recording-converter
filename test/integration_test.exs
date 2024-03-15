@@ -1,5 +1,5 @@
 defmodule RecordingConverter.RecordingTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
 
   import Mox
 
@@ -12,20 +12,24 @@ defmodule RecordingConverter.RecordingTest do
   @upload_id "upload_id"
   @etag 1
   @bucket_request_path "https://s3.amazonaws.com/bucket/"
-  @output_request_path "https://s3.amazonaws.com/bucket/output/"
+  @index_paths ["output/index.m3u8", "test_path/output/index.m3u8"]
 
   setup_all do
     bucket = Application.fetch_env!(:recording_converter, :bucket_name)
 
-    input_dir_path = Application.fetch_env!(:recording_converter, :input_dir_path)
+    report_path = Application.fetch_env!(:recording_converter, :report_path)
     output_dir_path = Application.fetch_env!(:recording_converter, :output_dir_path)
-    %{bucket: bucket, input_dir_path: input_dir_path, output_path: output_dir_path}
+    %{bucket: bucket, report_path: report_path, output_path: output_dir_path}
   end
 
   setup state do
+    # Wait for compositor close
+    Process.sleep(1_000)
+
     File.rmdir(state.output_path)
     File.mkdir(state.output_path)
 
+    Application.put_env(:recording_converter, :output_dir_path, state.output_path)
     Application.put_env(:ex_aws, :http_client, ExAws.Request.HttpMock)
 
     on_exit(fn ->
@@ -37,7 +41,7 @@ defmodule RecordingConverter.RecordingTest do
 
   test "one audio, one video is correctly converted", %{
     bucket: bucket,
-    input_dir_path: input_dir_path,
+    report_path: report_path,
     output_path: output_dir_path
   } do
     test_type = "/one-audio-one-video/"
@@ -52,7 +56,7 @@ defmodule RecordingConverter.RecordingTest do
       end)
 
     setup_terminator()
-    setup_multipart_download_backend(bucket, input_dir_path, output_dir_path, files)
+    setup_multipart_download_backend(bucket, report_path, output_dir_path, files)
 
     {:ok, pid} = RecordingConverter.start()
 
@@ -63,6 +67,50 @@ defmodule RecordingConverter.RecordingTest do
     PipelineTest.assert_pipeline_output(output_dir_path)
 
     assert_received :terminated
+  end
+
+  test "output_path is relative", %{
+    bucket: bucket,
+    report_path: report_path,
+    output_path: output_dir_path
+  } do
+    output_dir_path = "./#{output_dir_path}"
+
+    old_env = Application.fetch_env!(:recording_converter, :output_dir_path)
+
+    Application.put_env(:recording_converter, :output_dir_path, output_dir_path)
+
+    test_type = "/one-audio-one-video/"
+
+    test_fixtures_path = @fixtures <> test_type
+
+    files =
+      test_fixtures_path
+      |> File.ls!()
+      |> Map.new(fn file_name ->
+        {file_name, File.read!(test_fixtures_path <> file_name)}
+      end)
+
+    setup_terminator()
+
+    setup_multipart_download_backend(
+      bucket,
+      report_path,
+      RecordingConverter.output_directory(),
+      files
+    )
+
+    {:ok, pid} = RecordingConverter.start()
+
+    monitor_ref = Process.monitor(pid)
+
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 5_000
+
+    PipelineTest.assert_pipeline_output(output_dir_path)
+
+    assert_received :terminated
+
+    Application.put_env(:recording_converter, :output_dir_path, old_env)
   end
 
   test "uploading to s3 failed", %{
@@ -116,7 +164,7 @@ defmodule RecordingConverter.RecordingTest do
 
     request_handler =
       PipelineTest.request_handler(files, fn
-        :post, @output_request_path <> _rest, <<>>, _headers, _http_opts ->
+        :post, @bucket_request_path <> _rest, <<>>, _headers, _http_opts ->
           send(pid, :upload_initialized)
 
           {:ok,
@@ -131,10 +179,13 @@ defmodule RecordingConverter.RecordingTest do
              """
            }}
 
-        :post, @output_request_path <> file_name, _body, _headers, _http_opts ->
+        :post, @bucket_request_path <> file_name, _body, _headers, _http_opts ->
           send(pid, :upload_completed)
 
-          file_name = String.replace_suffix(file_name, "?uploadId=#{@upload_id}", "")
+          file_name =
+            file_name
+            |> String.replace_suffix("?uploadId=#{@upload_id}", "")
+            |> Path.basename()
 
           Agent.update(agent, &[file_name | &1])
 
@@ -151,12 +202,13 @@ defmodule RecordingConverter.RecordingTest do
              """
            }}
 
-        :put, @output_request_path <> "index.m3u8", _body, _headers, _http_opts ->
+        :put, @bucket_request_path <> index_file, _body, _headers, _http_opts
+        when index_file in @index_paths ->
           send(pid, :index_uploaded)
 
           {:ok, %{status_code: 200}}
 
-        :put, @output_request_path <> _file_name, _body, _headers, _http_opts ->
+        :put, @bucket_request_path <> _file_name, _body, _headers, _http_opts ->
           send(pid, :chunk_uploaded)
 
           {:ok,

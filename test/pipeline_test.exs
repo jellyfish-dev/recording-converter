@@ -1,6 +1,5 @@
 defmodule RecordingConverter.PipelineTest do
-  @moduledoc false
-  use ExUnit.Case
+  use ExUnit.Case, async: false
 
   import Mox
 
@@ -18,9 +17,9 @@ defmodule RecordingConverter.PipelineTest do
   setup_all do
     bucket = Application.fetch_env!(:recording_converter, :bucket_name)
 
-    input_dir_path = Application.fetch_env!(:recording_converter, :input_dir_path)
+    report_path = Application.fetch_env!(:recording_converter, :report_path)
     output_dir_path = Application.fetch_env!(:recording_converter, :output_dir_path)
-    %{bucket: bucket, input_dir_path: input_dir_path, output_path: output_dir_path}
+    %{bucket: bucket, report_path: report_path, output_path: output_dir_path}
   end
 
   setup state do

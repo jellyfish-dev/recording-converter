@@ -17,9 +17,26 @@ defmodule RecordingConverter do
     Application.fetch_env!(:recording_converter, :bucket_name)
   end
 
+  @spec s3_directory() :: binary()
+  def s3_directory() do
+    report_path = Application.fetch_env!(:recording_converter, :report_path)
+    Path.dirname(report_path)
+  end
+
   @spec output_directory() :: binary()
   def output_directory() do
-    Application.fetch_env!(:recording_converter, :output_dir_path)
+    output_directory = Application.fetch_env!(:recording_converter, :output_dir_path)
+
+    if String.starts_with?(output_directory, ".") do
+      s3_directory()
+      |> Path.join(output_directory)
+      |> Path.expand("")
+      |> Path.split()
+      |> Enum.drop(1)
+      |> Path.join()
+    else
+      output_directory
+    end
   end
 
   @spec start_link(list()) :: GenServer.on_start()
@@ -65,7 +82,7 @@ defmodule RecordingConverter do
   @impl true
   def handle_info({:DOWN, _monitor, :process, _pipeline_pid, reason}, state) do
     Logger.warning("Recording Converter pipeline is down with reason: #{inspect(reason)}")
-    # terminate(1)
+    terminate(1)
     {:stop, :error, state}
   end
 
@@ -110,7 +127,7 @@ defmodule RecordingConverter do
 
   defp send_file(file_name) do
     bucket = bucket_name()
-    file_path = output_directory() <> file_name
+    file_path = Path.join(output_directory(), file_name)
 
     file_path
     |> S3.Upload.stream_file()

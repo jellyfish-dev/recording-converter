@@ -3,7 +3,7 @@ import Config
 if config_env() != :test and Application.fetch_env(:recording_converter, :bucket_name) != nil do
   config :recording_converter,
     bucket_name: System.fetch_env!("BUCKET_NAME"),
-    input_dir_path: System.fetch_env!("DIRECTORY_PATH"),
+    report_path: System.fetch_env!("REPORT_PATH"),
     output_dir_path: System.fetch_env!("OUTPUT_DIRECTORY_PATH"),
     compositor_path: System.get_env("COMPOSITOR_PATH")
 
