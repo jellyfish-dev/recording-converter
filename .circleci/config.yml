@@ -3,20 +3,13 @@ orbs:
   elixir: membraneframework/elixir@1
 
 executors:
-  my-custom-executor:
+  docker-executor:
     docker:
-      - image: build:latest
+      - image: ghcr.io/jellyfish-dev/recording-converter-test:ci-v0-0-1
 
 jobs:
-  build-docker:
-    machine: true
-    steps:
-      - checkout
-      - run:
-          name: Build Docker image
-
   test:   # test job is defined here
-    executor: my-custom-executor
+    executor: docker-executor
     steps:
       - setup_remote_docker
       - checkout
@@ -35,11 +28,7 @@ workflows:
           filters: &filters
             tags:
               only: /v.*/
-      - build-docker
-      - test:
-          requires:
-            - build-docker
-
+      - test
       - elixir/lint:
           filters:
             <<: *filters
