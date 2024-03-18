@@ -88,9 +88,14 @@ defmodule RecordingConverter do
   end
 
   defp send_files_without_index() do
-    {_succeses, failures} =
+    files =
       output_directory()
       |> File.ls!()
+
+    Logger.info("Files to send: #{files}")
+
+    {_succeses, failures} =
+      files
       |> Enum.reject(&String.ends_with?(&1, @index_file))
       |> Enum.map(&send_file(&1))
       |> Enum.split_with(fn
@@ -123,9 +128,20 @@ defmodule RecordingConverter do
   end
 
   defp check_s3_bucket_and_local_equals?(objects) do
-    result? = output_directory() |> File.ls!() |> MapSet.new() == objects |> MapSet.new()
+    local_files = output_directory() |> File.ls!()
 
-    unless result?, do: Logger.error("Files on bucket and locally are not the same")
+    remote_files = MapSet.new(objects)
+
+    result? =
+      local_files
+      |> MapSet.new()
+      |> MapSet.equal?(remote_files)
+
+    unless result?,
+      do:
+        Logger.error(
+          "Files on bucket and locally are not the same, \nlocal: #{local_files},\nremote: #{objects}"
+        )
 
     result?
   end
@@ -134,10 +150,15 @@ defmodule RecordingConverter do
     bucket = bucket_name()
     file_path = Path.join(output_directory(), file_name)
 
-    file_path
-    |> S3.Upload.stream_file()
-    |> S3.upload(bucket, file_path)
-    |> ExAws.request()
+    result =
+      file_path
+      |> S3.Upload.stream_file()
+      |> S3.upload(bucket, file_path)
+      |> ExAws.request()
+
+    Logger.info("Send file #{file_path} to remote_path: #{file_path}, result: #{inspect(result)}")
+
+    result
   end
 
   defp terminate(status_code) do
