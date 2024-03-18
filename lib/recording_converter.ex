@@ -68,7 +68,7 @@ defmodule RecordingConverter do
     with :ok <- send_files_without_index(),
          {:ok, objects} <- get_bucket_objects(),
          objects <- fetch_bucket_objects_name(objects),
-         true <- check_s3_bucket_and_local_equals?([@index_file | objects]),
+         true <- check_s3_bucket_and_local_equals?(objects),
          {:ok, _value} <- send_file(@index_file) do
       terminate(0)
       {:stop, :normal, state}
@@ -91,12 +91,12 @@ defmodule RecordingConverter do
     files =
       output_directory()
       |> File.ls!()
+      |> Enum.reject(&String.ends_with?(&1, @index_file))
 
-    Logger.info("Files to send: #{files}")
+    Logger.info("Files to send: #{Enum.join(files, " ")}")
 
     {_succeses, failures} =
       files
-      |> Enum.reject(&String.ends_with?(&1, @index_file))
       |> Enum.map(&send_file(&1))
       |> Enum.split_with(fn
         {:ok, _value} -> true
@@ -128,7 +128,8 @@ defmodule RecordingConverter do
   end
 
   defp check_s3_bucket_and_local_equals?(objects) do
-    local_files = output_directory() |> File.ls!()
+    local_files =
+      output_directory() |> File.ls!() |> Enum.reject(&String.ends_with?(&1, @index_file))
 
     remote_files = MapSet.new(objects)
 
@@ -140,7 +141,7 @@ defmodule RecordingConverter do
     unless result?,
       do:
         Logger.error(
-          "Files on bucket and locally are not the same, \nlocal: #{local_files},\nremote: #{objects}"
+          "Files on bucket and locally are not the same, \nlocal: #{Enum.join(local_files, " ")},\nremote: #{Enum.join(objects, " ")}"
         )
 
     result?
