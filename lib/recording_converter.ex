@@ -73,7 +73,8 @@ defmodule RecordingConverter do
       terminate(0)
       {:stop, :normal, state}
     else
-      _any_error ->
+      error ->
+        Logger.error("Received error: #{inspect(error)}")
         terminate(1)
         {:stop, :error, state}
     end
@@ -122,7 +123,11 @@ defmodule RecordingConverter do
   end
 
   defp check_s3_bucket_and_local_equals?(objects) do
-    output_directory() |> File.ls!() |> MapSet.new() == objects |> MapSet.new()
+    result? = output_directory() |> File.ls!() |> MapSet.new() == objects |> MapSet.new()
+
+    unless result?, do: Logger.error("Files on bucket and locally are not the same")
+
+    result?
   end
 
   defp send_file(file_name) do
