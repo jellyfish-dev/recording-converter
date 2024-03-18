@@ -119,6 +119,13 @@ ENV LANG en_US.utf8
 # asdf in the entrypoint script.
 ENV PATH /root/.asdf/bin:/root/.asdf/shims:$PATH
 
+RUN apt-get update -y -qq && \
+  apt-get install -y \
+  build-essential curl pkg-config libssl-dev libclang-dev git sudo \
+  libegl1-mesa-dev libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers \
+  ffmpeg libavcodec-dev libavformat-dev libavfilter-dev libavdevice-dev libopus-dev && \
+  rm -rf /var/lib/apt/lists/*
+
 # Erlang
 RUN apt-get update \
   # This invocation causes `keyboard-configuration` package to be installed,
@@ -142,14 +149,6 @@ RUN apt-get update \
   && asdf install erlang 26.0.2 \
   && asdf global erlang 26.0.2 \
   && rm -rf /tmp/*
-
-RUN apt-get update -y -qq && \
-  apt-get install -y \
-  build-essential curl pkg-config libssl-dev libclang-dev git sudo \
-  libegl1-mesa-dev libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers \
-  ffmpeg libavcodec-dev libavformat-dev libavfilter-dev libavdevice-dev libopus-dev && \
-  rm -rf /var/lib/apt/lists/*
-
 
 # Elixir
 RUN asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git \
