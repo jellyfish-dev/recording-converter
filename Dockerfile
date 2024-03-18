@@ -32,7 +32,9 @@ RUN source ~/.cargo/env && cargo build --release --no-default-features
 # FROM elixir:1.16.2-otp-25 AS build_elixir
 # FROM cimg/elixir:1.16.0-erlang-26.2.1 AS build_elixir
 # FROM membraneframeworklabs/docker_membrane:latest as build_elixir
+# FROM ubuntu:mantic-20231011 as build_elixir
 FROM ubuntu:mantic-20231011 as build_elixir
+
 
 # Set locale to UTF-8
 ENV LANG C.UTF-8
