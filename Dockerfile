@@ -135,13 +135,21 @@ RUN apt-get update \
   libssh-dev \
   libwxgtk3.0-gtk3-dev \
   m4 \
-  unixodbc-dev \
-  xsltproc \
+  # unixodbc-dev \
+  # xsltproc \
   && rm -rf /var/lib/apt/lists/* \
   && asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git \
   && asdf install erlang 26.0.2 \
   && asdf global erlang 26.0.2 \
   && rm -rf /tmp/*
+
+RUN apt-get update -y -qq && \
+  apt-get install -y \
+  build-essential curl pkg-config libssl-dev libclang-dev git sudo \
+  libegl1-mesa-dev libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers \
+  ffmpeg libavcodec-dev libavformat-dev libavfilter-dev libavdevice-dev libopus-dev && \
+  rm -rf /var/lib/apt/lists/*
+
 
 # Elixir
 RUN asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git \
