@@ -118,13 +118,26 @@ ENV LANG en_US.utf8
 # asdf in the entrypoint script.
 ENV PATH /root/.asdf/bin:/root/.asdf/shims:$PATH
 
-# Compositor deps
-RUN apt-get update -y -qq && \
-  apt-get install -y \
-  build-essential curl pkg-config libssl-dev libclang-dev git sudo \
-  libegl1-mesa-dev libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers \
-  ffmpeg libavcodec-dev libavformat-dev libavfilter-dev libavdevice-dev libopus-dev && \
-  rm -rf /var/lib/apt/lists/*
+# # Compositor deps
+# RUN apt-get update -y -qq && \
+#   apt-get install -y \
+#   build-essential curl pkg-config libssl-dev libclang-dev git sudo \
+#   libegl1-mesa-dev libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers \
+#   ffmpeg libavcodec-dev libavformat-dev libavfilter-dev libavdevice-dev libopus-dev && \
+#   rm -rf /var/lib/apt/lists/*
+
+# Runtime deps
+RUN apt-get update \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+  openssl \
+  libncurses5-dev \
+  libncursesw5-dev \
+  libsrtp2-dev \
+  ffmpeg \
+  clang-format \
+  curl \
+  wget \
+  build-essential
 
 # Erlang
 RUN apt-get update \
