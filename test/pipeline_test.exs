@@ -9,7 +9,7 @@ defmodule RecordingConverter.PipelineTest do
   setup :set_mox_from_context
 
   @fixtures "./test/fixtures"
-  @input_request_path "https://s3.amazonaws.com/bucket/test_path/"
+  @input_request_path "https://s3.eu-central-1.amazonaws.com/bucket/test_path/"
   @index_name "index.m3u8"
 
   @type fallback_func_t :: (atom(), String.t(), map(), map(), Keyword.t() -> {atom(), map()})

@@ -8,4 +8,5 @@ config :recording_converter,
 
 config :ex_aws,
   access_key_id: "dummy",
-  secret_access_key: "dummy"
+  secret_access_key: "dummy",
+  region: "eu-central-1"

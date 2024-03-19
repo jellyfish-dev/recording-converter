@@ -11,7 +11,7 @@ defmodule RecordingConverter.RecordingTest do
   @fixtures "./test/fixtures/"
   @upload_id "upload_id"
   @etag 1
-  @bucket_request_path "https://s3.amazonaws.com/bucket/"
+  @bucket_request_path "https://s3.eu-central-1.amazonaws.com/bucket/"
   @index_paths ["output/index.m3u8", "test_path/output/index.m3u8"]
 
   setup_all do
