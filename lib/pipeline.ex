@@ -32,10 +32,6 @@ defmodule RecordingConverter.Pipeline do
       |> Map.fetch!("tracks")
       |> Enum.map(fn {key, value} -> Map.put(value, :id, key) end)
 
-
-    audio_tracks = Enum.filter(tracks, fn track -> track["type"] == "audio" end)
-    video_tracks = Enum.filter(tracks, fn track -> track["type"] == "video" end)
-
     output_directory = RecordingConverter.output_directory()
 
     File.mkdir_p!(output_directory)

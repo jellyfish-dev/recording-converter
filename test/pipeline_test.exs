@@ -108,7 +108,7 @@ defmodule RecordingConverter.PipelineTest do
         {file_name, File.read!(test_fixtures_path <> file_name)}
       end)
 
-    setup_multipart_download_backend(files, 4)
+    setup_multipart_download_backend(files, 8)
 
     assert pipeline =
              Pipeline.start_link_supervised!(

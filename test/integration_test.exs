@@ -57,7 +57,7 @@ defmodule RecordingConverter.RecordingTest do
         {file_name, File.read!(test_fixtures_path <> file_name)}
       end)
 
-    setup_multipart_download_backend(bucket, report_path, output_dir_path, files)
+    setup_multipart_download_backend(bucket, report_path, output_dir_path, files,29)
 
     {:ok, pid} = RecordingConverter.start()
 
@@ -97,7 +97,8 @@ defmodule RecordingConverter.RecordingTest do
       bucket,
       report_path,
       RecordingConverter.output_directory(),
-      files
+      files,
+      26
     )
 
     {:ok, pid} = RecordingConverter.start()
@@ -156,7 +157,8 @@ defmodule RecordingConverter.RecordingTest do
          bucket_name,
          dir_path,
          output_path,
-         files
+         files,
+         request_nums
        ) do
     output_prefix = output_path |> String.replace_suffix("/", "")
 
@@ -254,7 +256,7 @@ defmodule RecordingConverter.RecordingTest do
           {:ok, %{status_code: 200, body: body}}
       end)
 
-    expect(ExAws.Request.HttpMock, :request, 26, request_handler)
+    expect(ExAws.Request.HttpMock, :request, request_nums, request_handler)
     Process.sleep(100)
   end
 
@@ -264,7 +266,7 @@ defmodule RecordingConverter.RecordingTest do
         {:ok, %{status_code: 401}}
       end)
 
-    expect(ExAws.Request.HttpMock, :request, 14, request_handler)
+    expect(ExAws.Request.HttpMock, :request, 15, request_handler)
 
     Process.sleep(100)
   end
