@@ -5,8 +5,8 @@ defmodule RecordingConverter.RecordingTest do
 
   alias RecordingConverter.PipelineTest
 
-  setup :verify_on_exit!
   setup :set_mox_from_context
+  setup :verify_on_exit!
 
   @fixtures "./test/fixtures/"
   @upload_id "upload_id"
@@ -19,6 +19,7 @@ defmodule RecordingConverter.RecordingTest do
 
     report_path = Application.fetch_env!(:recording_converter, :report_path)
     output_dir_path = Application.fetch_env!(:recording_converter, :output_dir_path)
+
     %{bucket: bucket, report_path: report_path, output_path: output_dir_path}
   end
 
@@ -44,6 +45,7 @@ defmodule RecordingConverter.RecordingTest do
     report_path: report_path,
     output_path: output_dir_path
   } do
+    setup_terminator()
     test_type = "/one-audio-one-video/"
 
     test_fixtures_path = @fixtures <> test_type
@@ -55,7 +57,6 @@ defmodule RecordingConverter.RecordingTest do
         {file_name, File.read!(test_fixtures_path <> file_name)}
       end)
 
-    setup_terminator()
     setup_multipart_download_backend(bucket, report_path, output_dir_path, files)
 
     {:ok, pid} = RecordingConverter.start()
@@ -74,6 +75,7 @@ defmodule RecordingConverter.RecordingTest do
     report_path: report_path,
     output_path: output_dir_path
   } do
+    setup_terminator()
     output_dir_path = "./#{output_dir_path}"
 
     old_env = Application.fetch_env!(:recording_converter, :output_dir_path)
@@ -90,8 +92,6 @@ defmodule RecordingConverter.RecordingTest do
       |> Map.new(fn file_name ->
         {file_name, File.read!(test_fixtures_path <> file_name)}
       end)
-
-    setup_terminator()
 
     setup_multipart_download_backend(
       bucket,
@@ -116,6 +116,7 @@ defmodule RecordingConverter.RecordingTest do
   test "uploading to s3 failed", %{
     output_path: output_dir_path
   } do
+    setup_terminator(1)
     test_type = "/one-audio-one-video/"
 
     test_fixtures_path = @fixtures <> test_type
@@ -127,7 +128,6 @@ defmodule RecordingConverter.RecordingTest do
         {file_name, File.read!(test_fixtures_path <> file_name)}
       end)
 
-    setup_terminator(1)
     setup_s3_upload_failure(files)
 
     {:ok, pid} = RecordingConverter.start()
