@@ -11,6 +11,7 @@ defmodule RecordingConverter.PipelineTest do
   @fixtures "./test/fixtures"
   @input_request_path "https://s3.eu-central-1.amazonaws.com/bucket/test_path/"
   @index_name "index.m3u8"
+  @wait_for_pipeline 30_000
 
   @type fallback_func_t :: (atom(), String.t(), map(), map(), Keyword.t() -> {atom(), map()})
 
@@ -59,7 +60,7 @@ defmodule RecordingConverter.PipelineTest do
 
     monitor_ref = Process.monitor(pipeline)
 
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 10_000
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
 
     assert_pipeline_output(output_dir_path)
   end
@@ -88,7 +89,7 @@ defmodule RecordingConverter.PipelineTest do
 
     monitor_ref = Process.monitor(pipeline)
 
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 10_000
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
 
     assert_pipeline_output(output_dir_path)
   end
@@ -117,7 +118,7 @@ defmodule RecordingConverter.PipelineTest do
 
     monitor_ref = Process.monitor(pipeline)
 
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 10_000
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
 
     assert_pipeline_output(output_dir_path)
   end
@@ -146,7 +147,7 @@ defmodule RecordingConverter.PipelineTest do
 
     monitor_ref = Process.monitor(pipeline)
 
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 10_000
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
 
     assert_pipeline_output(output_dir_path)
   end

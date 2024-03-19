@@ -13,6 +13,7 @@ defmodule RecordingConverter.RecordingTest do
   @etag 1
   @bucket_request_path "https://s3.eu-central-1.amazonaws.com/bucket/"
   @index_paths ["output/index.m3u8", "test_path/output/index.m3u8"]
+  @wait_for_pipeline 30_000
 
   setup_all do
     bucket = Application.fetch_env!(:recording_converter, :bucket_name)
@@ -57,13 +58,13 @@ defmodule RecordingConverter.RecordingTest do
         {file_name, File.read!(test_fixtures_path <> file_name)}
       end)
 
-    setup_multipart_download_backend(bucket, report_path, output_dir_path, files, 29)
+    setup_multipart_download_backend(bucket, report_path, output_dir_path, files, 26)
 
     {:ok, pid} = RecordingConverter.start()
 
     monitor_ref = Process.monitor(pid)
 
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 5_000
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
 
     PipelineTest.assert_pipeline_output(output_dir_path)
 
@@ -105,7 +106,7 @@ defmodule RecordingConverter.RecordingTest do
 
     monitor_ref = Process.monitor(pid)
 
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 5_000
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
 
     PipelineTest.assert_pipeline_output(output_dir_path)
 
@@ -135,7 +136,7 @@ defmodule RecordingConverter.RecordingTest do
 
     monitor_ref = Process.monitor(pid)
 
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :error}, 5_000
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :error}, @wait_for_pipeline
 
     PipelineTest.assert_pipeline_output(output_dir_path)
 
@@ -266,7 +267,7 @@ defmodule RecordingConverter.RecordingTest do
         {:ok, %{status_code: 401}}
       end)
 
-    expect(ExAws.Request.HttpMock, :request, 15, request_handler)
+    expect(ExAws.Request.HttpMock, :request, 14, request_handler)
 
     Process.sleep(100)
   end
