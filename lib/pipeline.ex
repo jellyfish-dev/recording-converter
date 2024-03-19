@@ -18,21 +18,7 @@ defmodule RecordingConverter.Pipeline do
 
   @impl true
   def handle_init(_opts, _args) do
-    output_directory = RecordingConverter.output_directory()
 
-    File.mkdir_p!(output_directory)
-
-    main_spec = [
-      generate_sink_bin(output_directory),
-      generate_output_audio_branch(),
-      generate_output_video_branch()
-    ]
-
-    {[spec: main_spec], %{}}
-  end
-
-  @impl true
-  def handle_setup(_ctx, _state) do
     report =
       RecordingConverter.bucket_name()
       |> ExAws.S3.download_file(s3_file_path(@report_file), :memory)
@@ -46,10 +32,30 @@ defmodule RecordingConverter.Pipeline do
       |> Map.fetch!("tracks")
       |> Enum.map(fn {key, value} -> Map.put(value, :id, key) end)
 
-    tracks_spec = Enum.map(tracks, &create_branch(&1))
+
+    audio_tracks = Enum.filter(tracks, fn track -> track["type"] == "audio" end)
+    video_tracks = Enum.filter(tracks, fn track -> track["type"] == "video" end)
+
+    output_directory = RecordingConverter.output_directory()
+
+    File.mkdir_p!(output_directory)
+
+    main_spec = [
+      generate_sink_bin(output_directory),
+      generate_output_audio_branch(),
+      generate_output_video_branch()
+    ] |> Enum.reject(& is_nil(&1))
+
+    {[spec: main_spec], %{tracks: tracks}}
+  end
+
+  @impl true
+  def handle_setup(_ctx, state) do
+
+    tracks_spec = Enum.map(state.tracks, &create_branch(&1))
 
     sorted_tracks =
-      tracks
+      state.tracks
       |> Enum.flat_map(fn track ->
         [
           {:start, track, track["offset"]},
@@ -77,16 +83,26 @@ defmodule RecordingConverter.Pipeline do
         track["type"] == "audio"
       end)
 
-    {_atom, audio_track, _timestamp} = Enum.at(audio_tracks, -1)
-    {_atom, video_track, _timestamp} = Enum.at(video_tracks, -1)
+    audio_end_timestamp = if Enum.count(audio_tracks) > 0 do
+      {_atom, audio_track, _timestamp} = Enum.at(audio_tracks, -1)
+      calculate_track_duration(audio_track)
+    else
+      nil
+    end
+
+    video_end_timestamp = if Enum.count(video_tracks) > 0 do
+      {_atom, video_track, _timestamp} = Enum.at(video_tracks, -1)
+      calculate_track_duration(video_track)
+    else
+      nil
+    end
 
     unregister_actions =
       [
-        audio_track
-        |> calculate_track_duration()
-        |> Compositor.schedule_unregister_audio_output(),
-        video_track |> calculate_track_duration() |> Compositor.schedule_unregister_video_output()
+        Compositor.schedule_unregister_audio_output(audio_end_timestamp || video_end_timestamp),
+        Compositor.schedule_unregister_video_output(video_end_timestamp || audio_end_timestamp)
       ]
+      |> Enum.reject(&is_nil(&1))
 
     actions =
       (update_scene_notifications ++ unregister_actions)
@@ -170,11 +186,7 @@ defmodule RecordingConverter.Pipeline do
   end
 
   defp generate_output_video_branch() do
-    child(:video_compositor, %Membrane.LiveCompositor{
-      framerate: {30, 1},
-      composing_strategy: :ahead_of_time,
-      server_setup: Compositor.server_setup()
-    })
+    get_compositor(true)
     |> via_out(Pad.ref(:video_output, Compositor.video_output_id()),
       options: [
         encoder_preset: :slow,
@@ -200,7 +212,7 @@ defmodule RecordingConverter.Pipeline do
   end
 
   defp generate_output_audio_branch() do
-    get_child(:video_compositor)
+    get_compositor(false)
     |> via_out(Pad.ref(:audio_output, Compositor.audio_output_id()),
       options: [
         channels: :stereo,
@@ -223,6 +235,18 @@ defmodule RecordingConverter.Pipeline do
       ]
     )
     |> get_child(:hls_sink_bin)
+  end
+
+  defp get_compositor(compositor_exists?) do
+    if compositor_exists? do
+      get_child(:video_compositor)
+    else
+      child(:video_compositor, %Membrane.LiveCompositor{
+        framerate: {30, 1},
+        composing_strategy: :ahead_of_time,
+        server_setup: Compositor.server_setup()
+      })
+    end
   end
 
   defp create_branch(%{"encoding" => "H264"} = track) do

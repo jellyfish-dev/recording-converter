@@ -64,6 +64,65 @@ defmodule RecordingConverter.PipelineTest do
     assert_pipeline_output(output_dir_path)
   end
 
+
+  test "one audio is correctly converted", %{
+    output_path: output_dir_path
+  } do
+    test_type = "/one-audio/"
+
+    test_fixtures_path = @fixtures <> test_type
+
+    files =
+      test_fixtures_path
+      |> File.ls!()
+      |> Map.new(fn file_name ->
+        {file_name, File.read!(test_fixtures_path <> file_name)}
+      end)
+
+    setup_multipart_download_backend(files, 4)
+
+    assert pipeline =
+             Pipeline.start_link_supervised!(
+               module: RecordingConverter.Pipeline,
+               test_process: self()
+             )
+
+    monitor_ref = Process.monitor(pipeline)
+
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 10_000
+
+    assert_pipeline_output(output_dir_path)
+  end
+
+  test "one video is correctly converted", %{
+    output_path: output_dir_path
+  } do
+    test_type = "/one-video/"
+
+    test_fixtures_path = @fixtures <> test_type
+
+    files =
+      test_fixtures_path
+      |> File.ls!()
+      |> Map.new(fn file_name ->
+        {file_name, File.read!(test_fixtures_path <> file_name)}
+      end)
+
+    setup_multipart_download_backend(files, 4)
+
+    assert pipeline =
+             Pipeline.start_link_supervised!(
+               module: RecordingConverter.Pipeline,
+               test_process: self()
+             )
+
+    monitor_ref = Process.monitor(pipeline)
+
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, 10_000
+
+    assert_pipeline_output(output_dir_path)
+  end
+
   test "multiple audios, multiple videos is correctly converted", %{
     output_path: output_dir_path
   } do

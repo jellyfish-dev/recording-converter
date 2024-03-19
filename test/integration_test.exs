@@ -148,6 +148,8 @@ defmodule RecordingConverter.RecordingTest do
       assert expected_status_code == status_code
       send(pid, :terminated)
     end)
+
+    Process.sleep(100)
   end
 
   defp setup_multipart_download_backend(
@@ -185,8 +187,6 @@ defmodule RecordingConverter.RecordingTest do
           file_name =
             file_name
             |> String.replace_suffix("?uploadId=#{@upload_id}", "")
-
-          # |> Path.basename()
 
           Agent.update(agent, &[file_name | &1])
 
@@ -255,6 +255,7 @@ defmodule RecordingConverter.RecordingTest do
       end)
 
     expect(ExAws.Request.HttpMock, :request, 26, request_handler)
+    Process.sleep(100)
   end
 
   defp setup_s3_upload_failure(files) do
@@ -264,5 +265,7 @@ defmodule RecordingConverter.RecordingTest do
       end)
 
     expect(ExAws.Request.HttpMock, :request, 14, request_handler)
+
+    Process.sleep(100)
   end
 end
