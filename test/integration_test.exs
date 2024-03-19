@@ -57,7 +57,7 @@ defmodule RecordingConverter.RecordingTest do
         {file_name, File.read!(test_fixtures_path <> file_name)}
       end)
 
-    setup_multipart_download_backend(bucket, report_path, output_dir_path, files,29)
+    setup_multipart_download_backend(bucket, report_path, output_dir_path, files, 29)
 
     {:ok, pid} = RecordingConverter.start()
 

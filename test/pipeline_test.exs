@@ -64,7 +64,6 @@ defmodule RecordingConverter.PipelineTest do
     assert_pipeline_output(output_dir_path)
   end
 
-
   test "one audio is correctly converted", %{
     output_path: output_dir_path
   } do

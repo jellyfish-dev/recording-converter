@@ -18,7 +18,6 @@ defmodule RecordingConverter.Pipeline do
 
   @impl true
   def handle_init(_opts, _args) do
-
     report =
       RecordingConverter.bucket_name()
       |> ExAws.S3.download_file(s3_file_path(@report_file), :memory)
@@ -36,18 +35,19 @@ defmodule RecordingConverter.Pipeline do
 
     File.mkdir_p!(output_directory)
 
-    main_spec = [
-      generate_sink_bin(output_directory),
-      generate_output_audio_branch(),
-      generate_output_video_branch()
-    ] |> Enum.reject(& is_nil(&1))
+    main_spec =
+      [
+        generate_sink_bin(output_directory),
+        generate_output_audio_branch(),
+        generate_output_video_branch()
+      ]
+      |> Enum.reject(&is_nil(&1))
 
     {[spec: main_spec], %{tracks: tracks}}
   end
 
   @impl true
   def handle_setup(_ctx, state) do
-
     tracks_spec = Enum.map(state.tracks, &create_branch(&1))
 
     sorted_tracks =
@@ -79,19 +79,21 @@ defmodule RecordingConverter.Pipeline do
         track["type"] == "audio"
       end)
 
-    audio_end_timestamp = if Enum.count(audio_tracks) > 0 do
-      {_atom, audio_track, _timestamp} = Enum.at(audio_tracks, -1)
-      calculate_track_duration(audio_track)
-    else
-      nil
-    end
+    audio_end_timestamp =
+      if Enum.count(audio_tracks) > 0 do
+        {_atom, audio_track, _timestamp} = Enum.at(audio_tracks, -1)
+        calculate_track_duration(audio_track)
+      else
+        nil
+      end
 
-    video_end_timestamp = if Enum.count(video_tracks) > 0 do
-      {_atom, video_track, _timestamp} = Enum.at(video_tracks, -1)
-      calculate_track_duration(video_track)
-    else
-      nil
-    end
+    video_end_timestamp =
+      if Enum.count(video_tracks) > 0 do
+        {_atom, video_track, _timestamp} = Enum.at(video_tracks, -1)
+        calculate_track_duration(video_track)
+      else
+        nil
+      end
 
     unregister_actions =
       [
