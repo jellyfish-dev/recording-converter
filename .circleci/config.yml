@@ -17,7 +17,6 @@ jobs:
       - setup_remote_docker
       - checkout
       - run: mix deps.get
-      - run: MIX_ENV=test mix compile
       - run: mix test --warnings-as-errors
 
 
