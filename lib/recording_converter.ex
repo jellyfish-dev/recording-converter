@@ -129,7 +129,10 @@ defmodule RecordingConverter do
 
   defp check_s3_bucket_and_local_equals?(objects) do
     local_files =
-      output_directory() |> File.ls!() |> Enum.reject(&String.ends_with?(&1, @index_file))
+      output_directory()
+      |> File.ls!()
+      |> Enum.map(&Path.join(output_directory(), &1))
+      |> Enum.reject(&String.ends_with?(&1, @index_file))
 
     remote_files = MapSet.new(objects)
 

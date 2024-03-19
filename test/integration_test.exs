@@ -185,7 +185,8 @@ defmodule RecordingConverter.RecordingTest do
           file_name =
             file_name
             |> String.replace_suffix("?uploadId=#{@upload_id}", "")
-            |> Path.basename()
+
+          # |> Path.basename()
 
           Agent.update(agent, &[file_name | &1])
 
