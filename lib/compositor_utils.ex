@@ -24,7 +24,7 @@ defmodule RecordingConverter.Compositor do
       type: :tiles,
       width: @output_width,
       height: @output_height,
-      background_color_rgba: "#000088FF",
+      background_color_rgba: "#00000000",
       # transition: %{
       #   duration_ms: 300
       # },
@@ -93,6 +93,21 @@ defmodule RecordingConverter.Compositor do
       }
     }
 
-  defp from_ns_to_ms(timestamp_ns),
-    do: timestamp_ns |> Membrane.Time.nanoseconds() |> Membrane.Time.as_milliseconds(:round)
+  @spec schedule_unregister_input(number(), binary()) :: {:lc_request, map()}
+  def schedule_unregister_input(schedule_time_ns, input_id),
+    do: {
+      :lc_request,
+      %{
+        type: :unregister,
+        entity_type: :input_stream,
+        input_id: input_id,
+        schedule_time_ms: from_ns_to_ms(schedule_time_ns)
+      }
+    }
+
+  defp from_ns_to_ms(timestamp_ns) do
+    rounded_ts = timestamp_ns |> Membrane.Time.nanoseconds() |> Membrane.Time.as_milliseconds(:round)
+
+    max(0, rounded_ts - 10)
+  end
 end

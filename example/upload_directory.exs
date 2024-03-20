@@ -10,7 +10,7 @@ directory = Path.join([script_directory, "..", "test", "fixtures", "multiple-aud
 
 files = File.ls!(directory)
 bucket = System.fetch_env!("BUCKET_NAME")
-output_path = System.fetch_env!("DIRECTORY_PATH")
+output_path = System.fetch_env!("REPORT_PATH")
 hls_output_path = System.fetch_env!("OUTPUT_DIRECTORY_PATH")
 
 aws_config = [
@@ -35,7 +35,7 @@ aws_config = ExAws.Config.new(:s3, aws_config)
 # List S3 input files
 
 bucket
-|> ExAws.S3.list_objects(prefix: output_path)
+|> ExAws.S3.list_objects(prefix: Path.dirname(output_path))
 |> ExAws.request!(aws_config)
 |> then(& &1.body.contents)
 |> Enum.map(& &1.key)
@@ -54,7 +54,7 @@ bucket
 
 # stream =
 #   bucket
-#   |> ExAws.S3.list_objects(prefix: output_path)
+#   |> ExAws.S3.list_objects(prefix: hls_output_path)
 #   |> ExAws.stream!(aws_config)
 #   |> Stream.map(& &1.key)
 

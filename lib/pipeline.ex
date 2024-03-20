@@ -53,9 +53,10 @@ defmodule RecordingConverter.Pipeline do
     sorted_tracks =
       state.tracks
       |> Enum.flat_map(fn track ->
+        offset = track["offset"]
         [
-          {:start, track, track["offset"]},
-          {:end, track, track["offset"] + calculate_track_duration(track)}
+          {:start, track, offset},
+          {:end, track, offset + calculate_track_duration(track)}
         ]
       end)
       |> Enum.sort_by(fn {_atom, _track, timestamp} -> timestamp end)
@@ -69,7 +70,6 @@ defmodule RecordingConverter.Pipeline do
 
         {:end, %{"type" => type} = track, timestamp}, acc ->
           acc = Map.update!(acc, type, fn tracks -> Enum.reject(tracks, &(&1 == track)) end)
-
           {Compositor.generate_output_update(type, acc[type], timestamp), acc}
       end)
       |> then(fn {actions, _acc} -> actions end)
@@ -95,15 +95,20 @@ defmodule RecordingConverter.Pipeline do
         nil
       end
 
-    unregister_actions =
+    unregister_output_actions =
       [
         Compositor.schedule_unregister_audio_output(audio_end_timestamp || video_end_timestamp),
         Compositor.schedule_unregister_video_output(video_end_timestamp || audio_end_timestamp)
       ]
       |> Enum.reject(&is_nil(&1))
 
+    unregister_input_actions = sorted_tracks
+      |> Enum.filter(fn {atom, _track,_offset} -> atom == :end end)
+      |> Enum.map(fn {_atom, track,offset} -> Compositor.schedule_unregister_input(offset, track.id) end)
+
+
     actions =
-      (update_scene_notifications ++ unregister_actions)
+      (update_scene_notifications ++ unregister_input_actions ++ unregister_output_actions)
       |> Enum.map(&notify_compositor/1)
 
     actions = [{:spec, tracks_spec} | actions]

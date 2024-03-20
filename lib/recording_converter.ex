@@ -141,11 +141,22 @@ defmodule RecordingConverter do
       |> MapSet.new()
       |> MapSet.equal?(remote_files)
 
-    unless result?,
-      do:
-        Logger.error(
-          "Files on bucket and locally are not the same, \nlocal: #{Enum.join(local_files, " ")},\nremote: #{Enum.join(objects, " ")}"
+    unless result? do
+
+      local_files =
+        local_files
+        |> Enum.sort()
+        |> Enum.join(" ")
+
+        objects =
+          objects
+          |> Enum.sort()
+          |> Enum.join(" ")
+
+      Logger.error(
+          "Files on bucket and locally are not the same, \nlocal: #{local_files},\nremote: #{objects}"
         )
+    end
 
     result?
   end
