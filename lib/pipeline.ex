@@ -7,30 +7,16 @@ defmodule RecordingConverter.Pipeline do
   alias Membrane.AWS.S3.Source
   alias Membrane.HTTPAdaptiveStream.{SinkBin, Storages}
   alias Membrane.Time
-  alias RecordingConverter.Compositor
+  alias RecordingConverter.{Compositor, ReportParser}
 
   @segment_duration 3
   @output_width 1280
   @output_height 720
   @output_streams_number 2
   @report_file "report.json"
-  @delta_timestamp_milliseconds 100
 
   @impl true
   def handle_init(_ctx, opts) do
-    report =
-      opts.bucket_name
-      |> ExAws.S3.download_file(s3_file_path(@report_file, opts), :memory)
-      |> ExAws.stream!()
-      |> Enum.join("")
-
-    report = Jason.decode!(report)
-
-    tracks =
-      report
-      |> Map.fetch!("tracks")
-      |> Enum.map(fn {key, value} -> Map.put(value, :id, key) end)
-
     output_directory = opts.output_directory
 
     File.mkdir_p!(output_directory)
@@ -43,72 +29,26 @@ defmodule RecordingConverter.Pipeline do
       ]
       |> Enum.reject(&is_nil(&1))
 
-    {[spec: main_spec], %{tracks: tracks} |> Map.merge(opts)}
+    {[spec: main_spec], opts}
   end
 
   @impl true
   def handle_setup(_ctx, state) do
-    tracks_spec = Enum.map(state.tracks, &create_branch(&1, state))
+    report_path = s3_file_path(@report_file, state)
 
-    sorted_tracks =
-      state.tracks
-      |> Enum.flat_map(fn track ->
-        offset = track["offset"]
+    report = ReportParser.get_report(state.bucket_name, report_path)
 
-        [
-          {:start, track, offset},
-          {:end, track, offset + calculate_track_duration(track)}
-        ]
-      end)
-      |> Enum.sort_by(fn {_atom, _track, timestamp} -> timestamp end)
+    tracks = ReportParser.get_tracks(report)
 
-    update_scene_notifications =
-      sorted_tracks
-      |> Enum.map_reduce(%{"audio" => [], "video" => []}, fn
-        {:start, %{"type" => type} = track, timestamp}, acc ->
-          acc = Map.update!(acc, type, &[track | &1])
-          {Compositor.generate_output_update(type, acc[type], timestamp), acc}
+    tracks_spec = Enum.map(tracks, &create_branch(&1, state))
 
-        {:end, %{"type" => type} = track, timestamp}, acc ->
-          acc = Map.update!(acc, type, fn tracks -> Enum.reject(tracks, &(&1 == track)) end)
-          {Compositor.generate_output_update(type, acc[type], timestamp), acc}
-      end)
-      |> then(fn {actions, _acc} -> actions end)
+    tracks_actions = ReportParser.get_track_actions(tracks)
 
-    {audio_tracks, video_tracks} =
-      Enum.split_with(sorted_tracks, fn {_atom, track, _timestamp} ->
-        track["type"] == "audio"
-      end)
+    update_scene_notifications = ReportParser.create_update_scene_notifications(tracks_actions)
 
-    audio_end_timestamp =
-      if Enum.count(audio_tracks) > 0 do
-        {_atom, audio_track, _timestamp} = Enum.at(audio_tracks, -1)
-        calculate_track_duration(audio_track)
-      else
-        nil
-      end
+    unregister_output_actions = ReportParser.generate_unregister_output_actions(tracks_actions)
 
-    video_end_timestamp =
-      if Enum.count(video_tracks) > 0 do
-        {_atom, video_track, _timestamp} = Enum.at(video_tracks, -1)
-        calculate_track_duration(video_track)
-      else
-        nil
-      end
-
-    unregister_output_actions =
-      [
-        Compositor.schedule_unregister_audio_output(audio_end_timestamp || video_end_timestamp),
-        Compositor.schedule_unregister_video_output(video_end_timestamp || audio_end_timestamp)
-      ]
-      |> Enum.reject(&is_nil(&1))
-
-    unregister_input_actions =
-      sorted_tracks
-      |> Enum.filter(fn {atom, _track, _offset} -> atom == :end end)
-      |> Enum.map(fn {_atom, track, offset} ->
-        Compositor.schedule_unregister_input(offset, track.id)
-      end)
+    unregister_input_actions = ReportParser.generate_unregister_input_actions(tracks_actions)
 
     actions =
       (update_scene_notifications ++ unregister_input_actions ++ unregister_output_actions)
@@ -305,16 +245,5 @@ defmodule RecordingConverter.Pipeline do
 
   defp notify_compositor(notification) do
     {:notify_child, {:video_compositor, notification}}
-  end
-
-  defp calculate_track_duration(track) do
-    clock_rate_ms = div(track["clock_rate"], 1_000)
-
-    difference_in_milliseconds =
-      div(track["end_timestamp"] - track["start_timestamp"], clock_rate_ms)
-
-    (difference_in_milliseconds - @delta_timestamp_milliseconds)
-    |> Membrane.Time.milliseconds()
-    |> Membrane.Time.as_nanoseconds(:round)
   end
 end
