@@ -7,38 +7,6 @@ defmodule RecordingConverter do
 
   @index_file "index.m3u8"
 
-  @spec compositor_path() :: binary() | nil
-  def compositor_path() do
-    Application.fetch_env!(:recording_converter, :compositor_path)
-  end
-
-  @spec bucket_name() :: binary()
-  def bucket_name() do
-    Application.fetch_env!(:recording_converter, :bucket_name)
-  end
-
-  @spec s3_directory() :: binary()
-  def s3_directory() do
-    report_path = Application.fetch_env!(:recording_converter, :report_path)
-    Path.dirname(report_path)
-  end
-
-  @spec output_directory() :: binary()
-  def output_directory() do
-    output_directory = Application.fetch_env!(:recording_converter, :output_dir_path)
-
-    if String.starts_with?(output_directory, ".") do
-      s3_directory()
-      |> Path.join(output_directory)
-      |> Path.expand("")
-      |> Path.split()
-      |> Enum.drop(1)
-      |> Path.join()
-    else
-      output_directory
-    end
-  end
-
   @spec start_link(list()) :: GenServer.on_start()
   def start_link(args \\ []) do
     GenServer.start_link(__MODULE__, args)
@@ -56,7 +24,13 @@ defmodule RecordingConverter do
 
   @impl true
   def handle_continue(_continue_arg, state) do
-    {:ok, _supervisor, pipeline_pid} = Membrane.Pipeline.start(RecordingConverter.Pipeline, [])
+    {:ok, _supervisor, pipeline_pid} =
+      Membrane.Pipeline.start(RecordingConverter.Pipeline, %{
+        bucket_name: bucket_name(),
+        compositor_path: compositor_path(),
+        s3_directory: s3_directory(),
+        output_directory: output_directory()
+      })
 
     Process.monitor(pipeline_pid)
 
@@ -142,20 +116,19 @@ defmodule RecordingConverter do
       |> MapSet.equal?(remote_files)
 
     unless result? do
-
       local_files =
         local_files
         |> Enum.sort()
         |> Enum.join(" ")
 
-        objects =
-          objects
-          |> Enum.sort()
-          |> Enum.join(" ")
+      objects =
+        objects
+        |> Enum.sort()
+        |> Enum.join(" ")
 
       Logger.error(
-          "Files on bucket and locally are not the same, \nlocal: #{local_files},\nremote: #{objects}"
-        )
+        "Files on bucket and locally are not the same, \nlocal: #{local_files},\nremote: #{objects}"
+      )
     end
 
     result?
@@ -178,5 +151,33 @@ defmodule RecordingConverter do
 
   defp terminate(status_code) do
     Application.fetch_env!(:recording_converter, :terminator).terminate(status_code)
+  end
+
+  defp compositor_path() do
+    Application.fetch_env!(:recording_converter, :compositor_path)
+  end
+
+  defp bucket_name() do
+    Application.fetch_env!(:recording_converter, :bucket_name)
+  end
+
+  defp s3_directory() do
+    report_path = Application.fetch_env!(:recording_converter, :report_path)
+    Path.dirname(report_path)
+  end
+
+  defp output_directory() do
+    output_directory = Application.fetch_env!(:recording_converter, :output_dir_path)
+
+    if String.starts_with?(output_directory, ".") do
+      s3_directory()
+      |> Path.join(output_directory)
+      |> Path.expand("")
+      |> Path.split()
+      |> Enum.drop(1)
+      |> Path.join()
+    else
+      output_directory
+    end
   end
 end

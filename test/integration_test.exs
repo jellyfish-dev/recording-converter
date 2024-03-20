@@ -97,7 +97,7 @@ defmodule RecordingConverter.RecordingTest do
     setup_multipart_download_backend(
       bucket,
       report_path,
-      RecordingConverter.output_directory(),
+      "test_path/output",
       files,
       26
     )

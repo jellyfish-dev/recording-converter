@@ -17,10 +17,10 @@ defmodule RecordingConverter.Pipeline do
   @delta_timestamp_milliseconds 100
 
   @impl true
-  def handle_init(_opts, _args) do
+  def handle_init(_ctx, opts) do
     report =
-      RecordingConverter.bucket_name()
-      |> ExAws.S3.download_file(s3_file_path(@report_file), :memory)
+      opts.bucket_name
+      |> ExAws.S3.download_file(s3_file_path(@report_file, opts), :memory)
       |> ExAws.stream!()
       |> Enum.join("")
 
@@ -31,29 +31,30 @@ defmodule RecordingConverter.Pipeline do
       |> Map.fetch!("tracks")
       |> Enum.map(fn {key, value} -> Map.put(value, :id, key) end)
 
-    output_directory = RecordingConverter.output_directory()
+    output_directory = opts.output_directory
 
     File.mkdir_p!(output_directory)
 
     main_spec =
       [
         generate_sink_bin(output_directory),
-        generate_output_audio_branch(),
-        generate_output_video_branch()
+        generate_output_audio_branch(opts),
+        generate_output_video_branch(opts)
       ]
       |> Enum.reject(&is_nil(&1))
 
-    {[spec: main_spec], %{tracks: tracks}}
+    {[spec: main_spec], %{tracks: tracks} |> Map.merge(opts)}
   end
 
   @impl true
   def handle_setup(_ctx, state) do
-    tracks_spec = Enum.map(state.tracks, &create_branch(&1))
+    tracks_spec = Enum.map(state.tracks, &create_branch(&1, state))
 
     sorted_tracks =
       state.tracks
       |> Enum.flat_map(fn track ->
         offset = track["offset"]
+
         [
           {:start, track, offset},
           {:end, track, offset + calculate_track_duration(track)}
@@ -102,10 +103,12 @@ defmodule RecordingConverter.Pipeline do
       ]
       |> Enum.reject(&is_nil(&1))
 
-    unregister_input_actions = sorted_tracks
-      |> Enum.filter(fn {atom, _track,_offset} -> atom == :end end)
-      |> Enum.map(fn {_atom, track,offset} -> Compositor.schedule_unregister_input(offset, track.id) end)
-
+    unregister_input_actions =
+      sorted_tracks
+      |> Enum.filter(fn {atom, _track, _offset} -> atom == :end end)
+      |> Enum.map(fn {_atom, track, offset} ->
+        Compositor.schedule_unregister_input(offset, track.id)
+      end)
 
     actions =
       (update_scene_notifications ++ unregister_input_actions ++ unregister_output_actions)
@@ -188,8 +191,8 @@ defmodule RecordingConverter.Pipeline do
     })
   end
 
-  defp generate_output_video_branch() do
-    get_compositor(true)
+  defp generate_output_video_branch(_state) do
+    get_child(:video_compositor)
     |> via_out(Pad.ref(:video_output, Compositor.video_output_id()),
       options: [
         encoder_preset: :slow,
@@ -214,8 +217,12 @@ defmodule RecordingConverter.Pipeline do
     |> get_child(:hls_sink_bin)
   end
 
-  defp generate_output_audio_branch() do
-    get_compositor(false)
+  defp generate_output_audio_branch(state) do
+    child(:video_compositor, %Membrane.LiveCompositor{
+      framerate: {30, 1},
+      composing_strategy: :ahead_of_time,
+      server_setup: Compositor.server_setup(state.compositor_path)
+    })
     |> via_out(Pad.ref(:audio_output, Compositor.audio_output_id()),
       options: [
         channels: :stereo,
@@ -240,22 +247,10 @@ defmodule RecordingConverter.Pipeline do
     |> get_child(:hls_sink_bin)
   end
 
-  defp get_compositor(compositor_exists?) do
-    if compositor_exists? do
-      get_child(:video_compositor)
-    else
-      child(:video_compositor, %Membrane.LiveCompositor{
-        framerate: {30, 1},
-        composing_strategy: :ahead_of_time,
-        server_setup: Compositor.server_setup()
-      })
-    end
-  end
-
-  defp create_branch(%{"encoding" => "H264"} = track) do
+  defp create_branch(%{"encoding" => "H264"} = track, state) do
     child({:aws_s3, track.id}, %Source{
-      bucket: RecordingConverter.bucket_name(),
-      path: s3_file_path("/#{track.id}")
+      bucket: state.bucket_name,
+      path: s3_file_path("/#{track.id}", state)
     })
     |> child({:deserializer, track.id}, Membrane.Stream.Deserializer)
     |> child({:rtp, track.id}, %Membrane.RTP.DepayloaderBin{
@@ -276,10 +271,10 @@ defmodule RecordingConverter.Pipeline do
     |> get_child(:video_compositor)
   end
 
-  defp create_branch(%{"encoding" => "OPUS"} = track) do
+  defp create_branch(%{"encoding" => "OPUS"} = track, state) do
     child({:aws_s3, track.id}, %Source{
-      bucket: RecordingConverter.bucket_name(),
-      path: s3_file_path("/#{track.id}")
+      bucket: state.bucket_name,
+      path: s3_file_path("/#{track.id}", state)
     })
     |> child({:deserializer, track.id}, Membrane.Stream.Deserializer)
     |> child({:rtp, track.id}, %Membrane.RTP.DepayloaderBin{
@@ -298,14 +293,14 @@ defmodule RecordingConverter.Pipeline do
     |> get_child(:video_compositor)
   end
 
-  defp create_branch(track),
+  defp create_branch(track, _state),
     do:
       raise(
         "RecordingConverter support only tracks encoded in OPUS or H264. Received track #{inspect(track)} "
       )
 
-  defp s3_file_path(file) do
-    Path.join(RecordingConverter.s3_directory(), file)
+  defp s3_file_path(file, state) do
+    Path.join(state.s3_directory, file)
   end
 
   defp notify_compositor(notification) do

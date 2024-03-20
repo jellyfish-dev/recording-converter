@@ -20,7 +20,14 @@ defmodule RecordingConverter.PipelineTest do
 
     report_path = Application.fetch_env!(:recording_converter, :report_path)
     output_dir_path = Application.fetch_env!(:recording_converter, :output_dir_path)
-    %{bucket: bucket, report_path: report_path, output_path: output_dir_path}
+    compositor_path = Application.fetch_env!(:recording_converter, :compositor_path)
+
+    %{
+      bucket: bucket,
+      report_path: report_path,
+      output_path: output_dir_path,
+      compositor_path: compositor_path
+    }
   end
 
   setup state do
@@ -36,9 +43,10 @@ defmodule RecordingConverter.PipelineTest do
     state
   end
 
-  test "one audio, one video is correctly converted", %{
-    output_path: output_dir_path
-  } do
+  test "one audio, one video is correctly converted",
+       %{
+         output_path: output_dir_path
+       } = state do
     test_type = "/one-audio-one-video/"
 
     test_fixtures_path = @fixtures <> test_type
@@ -52,11 +60,7 @@ defmodule RecordingConverter.PipelineTest do
 
     setup_multipart_download_backend(files, 10)
 
-    assert pipeline =
-             Pipeline.start_link_supervised!(
-               module: RecordingConverter.Pipeline,
-               test_process: self()
-             )
+    pipeline = start_pipeline(state)
 
     monitor_ref = Process.monitor(pipeline)
 
@@ -65,9 +69,10 @@ defmodule RecordingConverter.PipelineTest do
     assert_pipeline_output(output_dir_path)
   end
 
-  test "one audio is correctly converted", %{
-    output_path: output_dir_path
-  } do
+  test "one audio is correctly converted",
+       %{
+         output_path: output_dir_path
+       } = state do
     test_type = "/one-audio/"
 
     test_fixtures_path = @fixtures <> test_type
@@ -81,11 +86,7 @@ defmodule RecordingConverter.PipelineTest do
 
     setup_multipart_download_backend(files, 4)
 
-    assert pipeline =
-             Pipeline.start_link_supervised!(
-               module: RecordingConverter.Pipeline,
-               test_process: self()
-             )
+    pipeline = start_pipeline(state)
 
     monitor_ref = Process.monitor(pipeline)
 
@@ -94,9 +95,10 @@ defmodule RecordingConverter.PipelineTest do
     assert_pipeline_output(output_dir_path)
   end
 
-  test "one video is correctly converted", %{
-    output_path: output_dir_path
-  } do
+  test "one video is correctly converted",
+       %{
+         output_path: output_dir_path
+       } = state do
     test_type = "/one-video/"
 
     test_fixtures_path = @fixtures <> test_type
@@ -110,11 +112,7 @@ defmodule RecordingConverter.PipelineTest do
 
     setup_multipart_download_backend(files, 8)
 
-    assert pipeline =
-             Pipeline.start_link_supervised!(
-               module: RecordingConverter.Pipeline,
-               test_process: self()
-             )
+    pipeline = start_pipeline(state)
 
     monitor_ref = Process.monitor(pipeline)
 
@@ -123,9 +121,10 @@ defmodule RecordingConverter.PipelineTest do
     assert_pipeline_output(output_dir_path)
   end
 
-  test "multiple audios, multiple videos is correctly converted", %{
-    output_path: output_dir_path
-  } do
+  test "multiple audios, multiple videos is correctly converted",
+       %{
+         output_path: output_dir_path
+       } = state do
     test_type = "/multiple-audios-and-videos/"
 
     test_fixtures_path = @fixtures <> test_type
@@ -139,11 +138,7 @@ defmodule RecordingConverter.PipelineTest do
 
     setup_multipart_download_backend(files, 18)
 
-    assert pipeline =
-             Pipeline.start_link_supervised!(
-               module: RecordingConverter.Pipeline,
-               test_process: self()
-             )
+    pipeline = start_pipeline(state)
 
     monitor_ref = Process.monitor(pipeline)
 
@@ -225,5 +220,25 @@ defmodule RecordingConverter.PipelineTest do
     request_handler = request_handler(files)
 
     expect(ExAws.Request.HttpMock, :request, nums, request_handler)
+  end
+
+  defp start_pipeline(state) do
+    assert pipeline =
+             Pipeline.start_link_supervised!(
+               module: RecordingConverter.Pipeline,
+               test_process: self(),
+               custom_args: %{
+                 bucket_name: state.bucket,
+                 s3_directory: Path.dirname(state.report_path),
+                 output_directory:
+                   if(String.starts_with?(state.output_path, "."),
+                     do: "test_path/output",
+                     else: "test_path/"
+                   ),
+                 compositor_path: state.compositor_path
+               }
+             )
+
+    pipeline
   end
 end

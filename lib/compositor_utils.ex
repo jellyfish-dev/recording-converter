@@ -6,9 +6,9 @@ defmodule RecordingConverter.Compositor do
   @video_output_id "video_output_1"
   @audio_output_id "audio_output_1"
 
-  @spec server_setup() :: :start_locally | {:start_locally, String.t()}
-  def server_setup() do
-    compositor_path = RecordingConverter.compositor_path()
+  @spec server_setup(binary) :: :start_locally | {:start_locally, String.t()}
+  def server_setup(compositor_path) do
+    compositor_path = compositor_path
 
     if is_nil(compositor_path) do
       :start_locally
@@ -25,10 +25,6 @@ defmodule RecordingConverter.Compositor do
       width: @output_width,
       height: @output_height,
       background_color_rgba: "#00000000",
-      # transition: %{
-      #   duration_ms: 300
-      # },
-      # margin: 10,
       children: children
     }
   end
@@ -106,7 +102,8 @@ defmodule RecordingConverter.Compositor do
     }
 
   defp from_ns_to_ms(timestamp_ns) do
-    rounded_ts = timestamp_ns |> Membrane.Time.nanoseconds() |> Membrane.Time.as_milliseconds(:round)
+    rounded_ts =
+      timestamp_ns |> Membrane.Time.nanoseconds() |> Membrane.Time.as_milliseconds(:round)
 
     max(0, rounded_ts - 10)
   end
