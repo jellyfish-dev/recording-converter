@@ -191,8 +191,7 @@ defmodule RecordingConverter.Pipeline do
   defp create_branch(%{"encoding" => "H264"} = track, state) do
     child({:aws_s3, track.id}, %Source{
       bucket: state.bucket_name,
-      path: s3_file_path("/#{track.id}", state),
-      cached_chunks_number: 100
+      path: s3_file_path("/#{track.id}", state)
     })
     |> child({:deserializer, track.id}, Membrane.Stream.Deserializer)
     |> child({:rtp, track.id}, %Membrane.RTP.DepayloaderBin{
