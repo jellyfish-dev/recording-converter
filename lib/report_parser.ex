@@ -15,7 +15,7 @@ defmodule RecordingConverter.ReportParser do
     |> Enum.map(fn {key, value} -> Map.put(value, :id, key) end)
   end
 
-  @spec get_track_actions(list()) :: list()
+  @spec get_all_track_actions(tracks :: list()) :: list()
   def get_all_track_actions(tracks) do
     tracks_actions = get_track_actions(tracks)
 

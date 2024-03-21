@@ -62,15 +62,12 @@ defmodule RecordingConverter do
   end
 
   defp send_files_without_index() do
-    files =
-      output_directory()
-      |> File.ls!()
-      |> Enum.reject(&String.ends_with?(&1, @index_file))
+    local_files = get_local_files_without_index()
 
-    Logger.info("Files to send: #{Enum.join(files, " ")}")
+    Logger.info("Files to send: #{Enum.join(local_files, " ")}")
 
     {_succeses, failures} =
-      files
+      local_files
       |> Enum.map(&send_file(&1))
       |> Enum.split_with(fn
         {:ok, _value} -> true
@@ -102,26 +99,30 @@ defmodule RecordingConverter do
   end
 
   defp check_s3_bucket_and_local_equals?(objects) do
-    local_files =
-      output_directory()
-      |> File.ls!()
-      |> Enum.map(&Path.join(output_directory(), &1))
-      |> Enum.reject(&String.ends_with?(&1, @index_file))
+    local_files = get_local_files_without_index()
+
+    local_files_paths = Enum.map(local_files, &Path.join(output_directory(), &1))
 
     remote_files = MapSet.new(objects)
 
     result? =
-      local_files
+      local_files_paths
       |> MapSet.new()
       |> MapSet.equal?(remote_files)
 
     unless result? do
       Logger.error(
-        "Files on bucket and locally are not the same, \nlocal: #{file_list_to_string(local_files)},\nremote: #{file_list_to_string(objects)}"
+        "Files on bucket and locally are not the same, \nlocal: #{file_list_to_string(local_files_paths)},\nremote: #{file_list_to_string(objects)}"
       )
     end
 
     result?
+  end
+
+  defp get_local_files_without_index() do
+    output_directory()
+    |> File.ls!()
+    |> Enum.reject(&String.ends_with?(&1, @index_file))
   end
 
   defp send_file(file_name) do
@@ -160,15 +161,19 @@ defmodule RecordingConverter do
     output_directory = Application.fetch_env!(:recording_converter, :output_dir_path)
 
     if String.starts_with?(output_directory, ".") do
-      s3_directory()
-      |> Path.join(output_directory)
-      |> Path.expand("")
-      |> Path.split()
-      |> Enum.drop(1)
-      |> Path.join()
+      convert_to_absolute_path(output_directory)
     else
       output_directory
     end
+  end
+
+  defp convert_to_absolute_path(output_directory) do
+    s3_directory()
+    |> Path.join(output_directory)
+    |> Path.expand("")
+    |> Path.split()
+    |> Enum.drop(1)
+    |> Path.join()
   end
 
   defp file_list_to_string(file_list) do
