@@ -1,0 +1,86 @@
+{
+  "recording_id": "63",
+  "tracks": {
+    "2e33ff68-ee0b-4bda-83ad-833289db8c6a.msr": {
+      "clock_rate": 90000,
+      "encoding": "H264",
+      "end_timestamp": 2724972130,
+      "metadata": null,
+      "offset": 10358968466,
+      "start_timestamp": 2708474230,
+      "type": "video"
+    },
+    "3f091f66-dd06-4e1e-ba6f-a4eb2fda239b.msr": {
+      "clock_rate": 90000,
+      "encoding": "H264",
+      "end_timestamp": 1010801031,
+      "metadata": null,
+      "offset": 203997013943,
+      "start_timestamp": 1009486401,
+      "type": "video"
+    },
+    "5cf87620-956f-44f6-aab7-2f89113650ea.msr": {
+      "clock_rate": 48000,
+      "encoding": "OPUS",
+      "end_timestamp": 3749288943,
+      "metadata": null,
+      "offset": 175624056089,
+      "start_timestamp": 3746891823,
+      "type": "audio"
+    },
+    "6ff39d61-2491-4281-82ac-0e60cd1a4767.msr": {
+      "clock_rate": 90000,
+      "encoding": "H264",
+      "end_timestamp": 2390584775,
+      "metadata": null,
+      "offset": 48972836843,
+      "start_timestamp": 2389593245,
+      "type": "video"
+    },
+    "7175d6c0-9e2b-4283-80be-a39cdf0c23bd.msr": {
+      "clock_rate": 90000,
+      "encoding": "H264",
+      "end_timestamp": 2140855906,
+      "metadata": null,
+      "offset": 15265909029,
+      "start_timestamp": 2124781996,
+      "type": "video"
+    },
+    "9b55307f-5171-4b83-ac4b-942ca332380d.msr": {
+      "clock_rate": 48000,
+      "encoding": "OPUS",
+      "end_timestamp": 3226721395,
+      "metadata": null,
+      "offset": 52836371783,
+      "start_timestamp": 3217026355,
+      "type": "audio"
+    },
+    "a58a0744-2a3e-4d9f-a225-4e4acc9b0de6.msr": {
+      "clock_rate": 90000,
+      "encoding": "H264",
+      "end_timestamp": 447153743,
+      "metadata": null,
+      "offset": 146880721434,
+      "start_timestamp": 440299793,
+      "type": "video"
+    },
+    "ae3327e1-3671-4306-8ca6-f76ce30c905b.msr": {
+      "clock_rate": 90000,
+      "encoding": "H264",
+      "end_timestamp": 2923407409,
+      "metadata": null,
+      "offset": 207167980068,
+      "start_timestamp": 2922109969,
+      "type": "video"
+    },
+    "e396db9d-e879-4c8b-808f-6d82cee9998c.msr": {
+      "clock_rate": 90000,
+      "encoding": "H264",
+      "end_timestamp": 3529851306,
+      "metadata": null,
+      "offset": 0,
+      "start_timestamp": 3519093606,
+      "type": "video"
+    }
+  }
+}

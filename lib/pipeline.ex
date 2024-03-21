@@ -183,7 +183,6 @@ defmodule RecordingConverter.Pipeline do
       options: [
         encoding: :AAC,
         segment_duration: Time.seconds(@segment_duration)
-        # partial_segment_duration: state.hls_config.partial_segment_duration
       ]
     )
     |> get_child(:hls_sink_bin)
@@ -192,7 +191,8 @@ defmodule RecordingConverter.Pipeline do
   defp create_branch(%{"encoding" => "H264"} = track, state) do
     child({:aws_s3, track.id}, %Source{
       bucket: state.bucket_name,
-      path: s3_file_path("/#{track.id}", state)
+      path: s3_file_path("/#{track.id}", state),
+      cached_chunks_number: 100
     })
     |> child({:deserializer, track.id}, Membrane.Stream.Deserializer)
     |> child({:rtp, track.id}, %Membrane.RTP.DepayloaderBin{
