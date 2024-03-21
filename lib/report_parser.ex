@@ -7,8 +7,28 @@ defmodule RecordingConverter.ReportParser do
 
   @type track_action :: {{:start | :end}, map(), non_neg_integer()}
 
-  @spec get_report(bucket_name :: binary(), report_path :: binary()) :: map()
-  def get_report(bucket_name, report_path) do
+  @spec get_tracks(bucket_name :: binary(), report_path :: binary()) :: list()
+  def get_tracks(bucket_name, report_path) do
+    bucket_name
+    |> get_report(report_path)
+    |> Map.fetch!("tracks")
+    |> Enum.map(fn {key, value} -> Map.put(value, :id, key) end)
+  end
+
+  @spec get_track_actions(list()) :: list()
+  def get_all_track_actions(tracks) do
+    tracks_actions = get_track_actions(tracks)
+
+    update_scene_notifications = create_update_scene_notifications(tracks_actions)
+
+    unregister_output_actions = generate_unregister_output_actions(tracks_actions)
+
+    unregister_input_actions = generate_unregister_input_actions(tracks_actions)
+
+    update_scene_notifications ++ unregister_input_actions ++ unregister_output_actions
+  end
+
+  defp get_report(bucket_name, report_path) do
     bucket_name
     |> ExAws.S3.download_file(report_path, :memory)
     |> ExAws.stream!()
@@ -16,15 +36,7 @@ defmodule RecordingConverter.ReportParser do
     |> Jason.decode!()
   end
 
-  @spec get_tracks(report :: map()) :: list()
-  def get_tracks(report) do
-    report
-    |> Map.fetch!("tracks")
-    |> Enum.map(fn {key, value} -> Map.put(value, :id, key) end)
-  end
-
-  @spec get_track_actions(list()) :: list(track_action())
-  def get_track_actions(tracks) do
+  defp get_track_actions(tracks) do
     tracks
     |> Enum.flat_map(fn track ->
       offset = track["offset"]
@@ -37,8 +49,7 @@ defmodule RecordingConverter.ReportParser do
     |> Enum.sort_by(fn {_atom, _track, timestamp} -> timestamp end)
   end
 
-  @spec create_update_scene_notifications(track_actions :: list(track_action())) :: list()
-  def create_update_scene_notifications(track_actions) do
+  defp create_update_scene_notifications(track_actions) do
     track_actions
     |> Enum.map_reduce(%{"audio" => [], "video" => []}, fn
       {:start, %{"type" => type} = track, timestamp}, acc ->
@@ -52,8 +63,7 @@ defmodule RecordingConverter.ReportParser do
     |> then(fn {actions, _acc} -> actions end)
   end
 
-  @spec generate_unregister_output_actions(track_actions :: list(track_action())) :: list()
-  def generate_unregister_output_actions(track_actions) do
+  defp generate_unregister_output_actions(track_actions) do
     {audio_end_timestamp, video_end_timestamp} =
       get_audio_and_video_end_timestamp(track_actions)
 
@@ -64,8 +74,7 @@ defmodule RecordingConverter.ReportParser do
     |> Enum.reject(&is_nil(&1))
   end
 
-  @spec generate_unregister_input_actions(track_actions :: list(track_action())) :: list()
-  def generate_unregister_input_actions(track_actions) do
+  defp generate_unregister_input_actions(track_actions) do
     track_actions
     |> Enum.filter(fn {atom, _track, _offset} -> atom == :end end)
     |> Enum.map(fn {_atom, track, offset} ->

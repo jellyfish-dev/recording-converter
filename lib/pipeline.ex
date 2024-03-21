@@ -36,22 +36,13 @@ defmodule RecordingConverter.Pipeline do
   def handle_setup(_ctx, state) do
     report_path = s3_file_path(@report_file, state)
 
-    report = ReportParser.get_report(state.bucket_name, report_path)
-
-    tracks = ReportParser.get_tracks(report)
+    tracks = ReportParser.get_tracks(state.bucket_name, report_path)
 
     tracks_spec = Enum.map(tracks, &create_branch(&1, state))
 
-    tracks_actions = ReportParser.get_track_actions(tracks)
-
-    update_scene_notifications = ReportParser.create_update_scene_notifications(tracks_actions)
-
-    unregister_output_actions = ReportParser.generate_unregister_output_actions(tracks_actions)
-
-    unregister_input_actions = ReportParser.generate_unregister_input_actions(tracks_actions)
-
     actions =
-      (update_scene_notifications ++ unregister_input_actions ++ unregister_output_actions)
+      tracks
+      |> ReportParser.get_all_track_actions()
       |> Enum.map(&notify_compositor/1)
 
     actions = [{:spec, tracks_spec} | actions]
