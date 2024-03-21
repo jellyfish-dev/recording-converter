@@ -126,6 +126,8 @@ defmodule RecordingConverter.Pipeline do
   defp generate_sink_bin(output_directory) do
     child(:hls_sink_bin, %SinkBin{
       hls_mode: :muxed_av,
+      target_window_duration: :infinity,
+      persist?: true,
       storage: %Storages.FileStorage{directory: output_directory},
       manifest_module: Membrane.HTTPAdaptiveStream.HLS
     })
