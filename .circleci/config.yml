@@ -10,7 +10,7 @@ executors:
           MIX_ENV: test
 
 jobs:
-  test:   # test job is defined here
+  test:
     executor: docker-executor
     steps:
       - setup_remote_docker

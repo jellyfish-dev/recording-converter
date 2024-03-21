@@ -163,15 +163,15 @@ defmodule RecordingConverter.PipelineTest do
         {file_name, File.read!(test_fixtures_path <> file_name)}
       end)
 
-    setup_multipart_download_backend(files, 1_000)
+    setup_multipart_download_backend(files, 200)
 
     pipeline = start_pipeline(state)
 
     monitor_ref = Process.monitor(pipeline)
 
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline * 5
+    assert_receive :received_head
 
-    IO.inspect(output_dir_path, label: :WTF)
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline * 5
 
     assert_pipeline_output(output_dir_path)
   end
@@ -181,9 +181,13 @@ defmodule RecordingConverter.PipelineTest do
           fallback :: nil | fallback_func_t()
         ) :: {atom(), map()}
   def request_handler(files, fallback \\ nil) do
+    pid = self()
+
     fn
       :head, @input_request_path <> file, _req_body, _headers, _http_opts ->
         file_body = Map.fetch!(files, file)
+
+        send(pid, :received_head)
 
         content_length = file_body |> byte_size |> to_string
 

@@ -29,9 +29,6 @@ WORKDIR /root/project
 
 RUN source ~/.cargo/env && cargo build --release --no-default-features
 
-# FROM elixir:1.16.2-otp-25 AS build_elixir
-# FROM cimg/elixir:1.16.0-erlang-26.2.1 AS build_elixir
-# FROM membraneframeworklabs/docker_membrane:latest as build_elixir
 FROM ubuntu:mantic-20231011 as build_elixir
 
 
@@ -118,14 +115,6 @@ ENV LANG en_US.utf8
 # asdf in the entrypoint script.
 ENV PATH /root/.asdf/bin:/root/.asdf/shims:$PATH
 
-# # Compositor deps
-# RUN apt-get update -y -qq && \
-#   apt-get install -y \
-#   build-essential curl pkg-config libssl-dev libclang-dev git sudo \
-#   libegl1-mesa-dev libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers \
-#   ffmpeg libavcodec-dev libavformat-dev libavfilter-dev libavdevice-dev libopus-dev && \
-#   rm -rf /var/lib/apt/lists/*
-
 # Runtime deps
 RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -147,17 +136,6 @@ RUN apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y \
   autoconf \
   build-essential \
-  # fop \
-  # libgl1-mesa-dev \
-  # libglu1-mesa-dev \
-  # libncurses5-dev \
-  # libpng-dev \
-  # libssh-dev \
-  # libwxgtk3.0-gtk3-dev \
-  # m4 \
-  # unixodbc-dev \
-  # xsltproc \
-  # && rm -rf /var/lib/apt/lists/* \
   && asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git \
   && asdf install erlang 26.0.2 \
   && asdf global erlang 26.0.2 \
@@ -191,7 +169,6 @@ RUN apt-get update \
   libfreetype-dev \
   libx265-dev \
   && rm -rf /var/lib/apt/lists/* \
-  # fdk-aac
   && cd /tmp/ \
   && wget https://downloads.sourceforge.net/opencore-amr/fdk-aac-2.0.0.tar.gz \
   && tar -xf fdk-aac-2.0.0.tar.gz && cd fdk-aac-2.0.0 \
@@ -226,18 +203,6 @@ RUN asdf plugin add ffmpeg \
   && asdf install ffmpeg 6.1.1 \
   && asdf global ffmpeg 6.1.1 \
   && cp -r /root/.asdf/installs/ffmpeg/6.1.1/lib/* /usr/lib
-
-# # OpenGL dependencies - based on https://github.com/thewtex/docker-opengl
-# RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-#    libgl1-mesa-dri \
-#    openbox \
-#    supervisor \
-#    x11-xserver-utils \
-#    xinit \
-#    xserver-xorg-video-dummy \
-#    python3-pip \
-#    && pip install git+https://github.com/coderanger/supervisor-stdout \
-#    && apt-get -y clean
 
 WORKDIR /app
 
