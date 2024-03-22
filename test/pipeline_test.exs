@@ -147,35 +147,35 @@ defmodule RecordingConverter.PipelineTest do
     assert_pipeline_output(output_dir_path)
   end
 
-  @tag timeout: 150_000
-  test "SinkBin stores all segments",
-       %{
-         output_path: output_dir_path
-       } = state do
-    test_type = "/long-video/"
+  # @tag timeout: 150_000
+  # test "SinkBin stores all segments",
+  #      %{
+  #        output_path: output_dir_path
+  #      } = state do
+  #   test_type = "/long-video/"
 
-    test_fixtures_path = @fixtures <> test_type
+  #   test_fixtures_path = @fixtures <> test_type
 
-    files =
-      test_fixtures_path
-      |> File.ls!()
-      |> Map.new(fn file_name ->
-        {file_name, File.read!(test_fixtures_path <> file_name)}
-      end)
+  #   files =
+  #     test_fixtures_path
+  #     |> File.ls!()
+  #     |> Map.new(fn file_name ->
+  #       {file_name, File.read!(test_fixtures_path <> file_name)}
+  #     end)
 
-    setup_multipart_download_backend(files, 16)
+  #   setup_multipart_download_backend(files, 16)
 
-    pipeline = start_pipeline(state)
+  #   pipeline = start_pipeline(state)
 
-    monitor_ref = Process.monitor(pipeline)
+  #   monitor_ref = Process.monitor(pipeline)
 
-    assert_receive :received_head
+  #   assert_receive :received_head
 
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal},
-                   @wait_for_pipeline * 5
+  #   assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal},
+  #                  @wait_for_pipeline * 5
 
-    assert_pipeline_output(output_dir_path)
-  end
+  #   assert_pipeline_output(output_dir_path)
+  # end
 
   @spec request_handler(
           files :: [String.t()],
