@@ -147,7 +147,7 @@ defmodule RecordingConverter.PipelineTest do
     assert_pipeline_output(output_dir_path)
   end
 
-  @tag timeout: 300_000
+  @tag timeout: 150_000
   test "SinkBin stores all segments",
        %{
          output_path: output_dir_path
@@ -163,7 +163,7 @@ defmodule RecordingConverter.PipelineTest do
         {file_name, File.read!(test_fixtures_path <> file_name)}
       end)
 
-    setup_multipart_download_backend(files, 200)
+    setup_multipart_download_backend(files, 16)
 
     pipeline = start_pipeline(state)
 
@@ -172,7 +172,7 @@ defmodule RecordingConverter.PipelineTest do
     assert_receive :received_head
 
     assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal},
-                   @wait_for_pipeline * 10
+                   @wait_for_pipeline * 5
 
     assert_pipeline_output(output_dir_path)
   end
@@ -244,8 +244,12 @@ defmodule RecordingConverter.PipelineTest do
   end
 
   defp assert_file_exist!(file, dir_path) when is_binary(file) do
-    assert {:ok, file} = File.read(dir_path <> file),
-           "File that doesn't exists: #{dir_path <> file}"
+    {result, file} = File.read(dir_path <> file)
+
+    assert(
+      result == :ok,
+      "File that doesn't exists: #{dir_path <> file}"
+    )
 
     assert byte_size(file) > 0
     file

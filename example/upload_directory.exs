@@ -62,8 +62,26 @@ defmodule ExampleS3 do
     |> ExAws.S3.delete_all_objects(stream)
     |> ExAws.request!(@aws_config)
   end
+
+  def download_input_files(output_dir \\ "./example-output/") do
+    input_files = list_input_files()
+
+    Enum.each(input_files, fn file ->
+      dest_file = Path.join(output_dir, file)
+
+      dest_file
+      |> Path.dirname()
+      |> File.mkdir_p!()
+
+      @bucket
+      |> ExAws.S3.download_file(file, dest_file)
+      |> ExAws.request!(@aws_config)
+    end)
+  end
 end
 
 ExampleS3.list_input_files()
 
 ExampleS3.list_output_files()
+
+ExampleS3.download_input_files()
