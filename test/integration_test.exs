@@ -25,8 +25,7 @@ defmodule RecordingConverter.RecordingTest do
   end
 
   setup state do
-    # Wait for compositor close
-    Process.sleep(1_000)
+    kill_compositor_process()
 
     File.rmdir(state.output_path)
     File.mkdir(state.output_path)
@@ -36,6 +35,7 @@ defmodule RecordingConverter.RecordingTest do
 
     on_exit(fn ->
       Application.delete_env(:ex_aws, :http_client)
+      Application.put_env(:recording_converter, :output_dir_path, state.output_path)
       kill_compositor_process()
     end)
 
@@ -80,8 +80,6 @@ defmodule RecordingConverter.RecordingTest do
     setup_terminator()
     output_dir_path = "./#{output_dir_path}"
 
-    old_env = Application.fetch_env!(:recording_converter, :output_dir_path)
-
     Application.put_env(:recording_converter, :output_dir_path, output_dir_path)
 
     test_type = "/one-audio-one-video/"
@@ -112,8 +110,6 @@ defmodule RecordingConverter.RecordingTest do
     PipelineTest.assert_pipeline_output("test_path/output/")
 
     assert_received :terminated
-
-    Application.put_env(:recording_converter, :output_dir_path, old_env)
   end
 
   test "uploading to s3 failed", %{
@@ -277,6 +273,6 @@ defmodule RecordingConverter.RecordingTest do
     port = 8081
 
     command = "lsof -i tcp:#{port} | grep LISTEN | awk '{print $2}' | xargs kill -9"
-    :os.cmd(String.to_charlist(command))
+    System.cmd("sh", ["-c", command])
   end
 end

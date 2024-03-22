@@ -31,6 +31,8 @@ defmodule RecordingConverter.PipelineTest do
   end
 
   setup state do
+    kill_compositor_process()
+
     File.rmdir(state.output_path)
     File.mkdir(state.output_path)
 
@@ -218,9 +220,12 @@ defmodule RecordingConverter.PipelineTest do
     file_path = dir_path <> file
     {result, file} = File.read(file_path)
 
+    dir_files = File.ls!(dir_path) |> Enum.join(" ")
+    local_files = File.ls!("./") |> Enum.join(" ")
+
     assert(
       result == :ok,
-      "File that doesn't exists: #{file_path}"
+      "File that doesn't exists: #{file_path},\n dir/files: #{dir_files},\n ./files: #{local_files}"
     )
 
     assert byte_size(file) > 0
@@ -257,6 +262,7 @@ defmodule RecordingConverter.PipelineTest do
     port = 8081
 
     command = "lsof -i tcp:#{port} | grep LISTEN | awk '{print $2}' | xargs kill -9"
-    :os.cmd(String.to_charlist(command))
+
+    System.cmd("sh", ["-c", command])
   end
 end
