@@ -8,6 +8,7 @@ executors:
       - image: ghcr.io/jellyfish-dev/recording-converter-test:0.0.1
         environment:
           MIX_ENV: test
+    resource_class: xlarge
 
 jobs:
   test:
