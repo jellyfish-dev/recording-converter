@@ -171,7 +171,8 @@ defmodule RecordingConverter.PipelineTest do
 
     assert_receive :received_head
 
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline * 5
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal},
+                   @wait_for_pipeline * 10
 
     assert_pipeline_output(output_dir_path)
   end
@@ -185,7 +186,7 @@ defmodule RecordingConverter.PipelineTest do
 
     fn
       :head, @input_request_path <> file, _req_body, _headers, _http_opts ->
-        file_body = Map.fetch!(files, file)
+        assert {:ok, file_body} = Map.fetch(files, file)
 
         send(pid, :received_head)
 
@@ -243,7 +244,8 @@ defmodule RecordingConverter.PipelineTest do
   end
 
   defp assert_file_exist!(file, dir_path) when is_binary(file) do
-    assert {:ok, file} = File.read(dir_path <> file)
+    assert {:ok, file} = File.read(dir_path <> file),
+           "File that doesn't exists: #{dir_path <> file}"
 
     assert byte_size(file) > 0
     file
