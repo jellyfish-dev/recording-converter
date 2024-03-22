@@ -8,15 +8,19 @@ executors:
       - image: ghcr.io/jellyfish-dev/recording-converter-test:0.0.1
         environment:
           MIX_ENV: test
-    resource_class: xlarge
-
 jobs:
   test:
     executor: docker-executor
     steps:
       - setup_remote_docker
       - checkout
+      - restore_cache:
+          key: v1-deps-{{ checksum "mix.lock" }}
       - run: mix deps.get
+      - save_cache:
+          key: v1-deps-{{ checksum "mix.lock" }}
+          paths:
+            - deps
       - run: MIX_ENV=test mix compile --force
       - run: mix test --warnings-as-errors
 

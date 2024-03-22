@@ -108,7 +108,7 @@ defmodule RecordingConverter.RecordingTest do
 
     assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
 
-    PipelineTest.assert_pipeline_output(output_dir_path)
+    PipelineTest.assert_pipeline_output("test_path/output/")
 
     assert_received :terminated
 
