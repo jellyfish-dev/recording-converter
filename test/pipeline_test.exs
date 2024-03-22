@@ -38,6 +38,7 @@ defmodule RecordingConverter.PipelineTest do
 
     on_exit(fn ->
       Application.delete_env(:ex_aws, :http_client)
+      kill_compositor_process()
     end)
 
     state
@@ -250,5 +251,12 @@ defmodule RecordingConverter.PipelineTest do
              )
 
     pipeline
+  end
+
+  defp kill_compositor_process() do
+    port = 8081
+
+    command = "lsof -i tcp:#{port} | grep LISTEN | awk '{print $2}' | xargs kill -9"
+    :os.cmd(String.to_charlist(command))
   end
 end
