@@ -8,7 +8,6 @@ defmodule RecordingConverter.RecordingTest do
   setup :set_mox_from_context
   setup :verify_on_exit!
 
-  @fixtures "./test/fixtures/"
   @upload_id "upload_id"
   @etag 1
   @bucket_request_path "https://s3.eu-central-1.amazonaws.com/bucket/"
@@ -50,14 +49,7 @@ defmodule RecordingConverter.RecordingTest do
     setup_terminator()
     test_type = "/one-audio-one-video/"
 
-    test_fixtures_path = @fixtures <> test_type
-
-    files =
-      test_fixtures_path
-      |> File.ls!()
-      |> Map.new(fn file_name ->
-        {file_name, File.read!(test_fixtures_path <> file_name)}
-      end)
+    files = PipelineTest.get_files(test_type)
 
     setup_multipart_download_backend(bucket, report_path, output_dir_path, files, 26)
 
@@ -84,14 +76,7 @@ defmodule RecordingConverter.RecordingTest do
 
     test_type = "/one-audio-one-video/"
 
-    test_fixtures_path = @fixtures <> test_type
-
-    files =
-      test_fixtures_path
-      |> File.ls!()
-      |> Map.new(fn file_name ->
-        {file_name, File.read!(test_fixtures_path <> file_name)}
-      end)
+    files = PipelineTest.get_files(test_type)
 
     setup_multipart_download_backend(
       bucket,
@@ -118,14 +103,7 @@ defmodule RecordingConverter.RecordingTest do
     setup_terminator(1)
     test_type = "/one-audio-one-video/"
 
-    test_fixtures_path = @fixtures <> test_type
-
-    files =
-      test_fixtures_path
-      |> File.ls!()
-      |> Map.new(fn file_name ->
-        {file_name, File.read!(test_fixtures_path <> file_name)}
-      end)
+    files = PipelineTest.get_files(test_type)
 
     setup_s3_upload_failure(files)
 

@@ -72,6 +72,7 @@ defmodule RecordingConverter.PipelineTest do
     end
   end
 
+  @spec get_files(test_type :: binary()) :: list()
   def get_files(test_type) do
     test_fixtures_path = @fixtures <> test_type
 
