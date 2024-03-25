@@ -72,45 +72,45 @@ defmodule RecordingConverter.RecordingTest do
     assert_received :terminated
   end
 
-  # test "output_path is relative", %{
-  #   bucket: bucket,
-  #   report_path: report_path,
-  #   output_path: output_dir_path
-  # } do
-  #   setup_terminator()
-  #   output_dir_path = "./#{output_dir_path}"
+  test "output_path is relative", %{
+    bucket: bucket,
+    report_path: report_path,
+    output_path: output_dir_path
+  } do
+    setup_terminator()
+    output_dir_path = "./#{output_dir_path}"
 
-  #   Application.put_env(:recording_converter, :output_dir_path, output_dir_path)
+    Application.put_env(:recording_converter, :output_dir_path, output_dir_path)
 
-  #   test_type = "/one-audio-one-video/"
+    test_type = "/one-audio-one-video/"
 
-  #   test_fixtures_path = @fixtures <> test_type
+    test_fixtures_path = @fixtures <> test_type
 
-  #   files =
-  #     test_fixtures_path
-  #     |> File.ls!()
-  #     |> Map.new(fn file_name ->
-  #       {file_name, File.read!(test_fixtures_path <> file_name)}
-  #     end)
+    files =
+      test_fixtures_path
+      |> File.ls!()
+      |> Map.new(fn file_name ->
+        {file_name, File.read!(test_fixtures_path <> file_name)}
+      end)
 
-  #   setup_multipart_download_backend(
-  #     bucket,
-  #     report_path,
-  #     "test_path/output",
-  #     files,
-  #     26
-  #   )
+    setup_multipart_download_backend(
+      bucket,
+      report_path,
+      "test_path/output",
+      files,
+      26
+    )
 
-  #   {:ok, pid} = RecordingConverter.start()
+    {:ok, pid} = RecordingConverter.start()
 
-  #   monitor_ref = Process.monitor(pid)
+    monitor_ref = Process.monitor(pid)
 
-  #   assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
+    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
 
-  #   PipelineTest.assert_pipeline_output("test_path/output/")
+    PipelineTest.assert_pipeline_output("test_path/output/")
 
-  #   assert_received :terminated
-  # end
+    assert_received :terminated
+  end
 
   test "uploading to s3 failed", %{
     output_path: output_dir_path

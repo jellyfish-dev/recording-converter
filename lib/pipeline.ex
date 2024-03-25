@@ -19,6 +19,15 @@ defmodule RecordingConverter.Pipeline do
   def handle_init(_ctx, opts) do
     output_directory = opts.output_directory
 
+    case File.ls(output_directory) do
+      {:ok, files} when files != [] ->
+        Logger.warning("Some files #{Enum.join(files, " ")} are in output directory, remove them")
+        File.rm_rf(output_directory)
+
+      _other ->
+        nil
+    end
+
     File.mkdir_p!(output_directory)
 
     main_spec =
