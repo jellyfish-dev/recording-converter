@@ -40,9 +40,6 @@ defmodule RecordingConverter do
   @impl true
   def handle_info({:DOWN, _monitor, :process, _pipeline_pid, :normal}, state) do
     with :ok <- send_files_without_index(),
-         {:ok, objects} <- get_bucket_objects(),
-         objects <- fetch_bucket_objects_name(objects),
-         true <- check_s3_bucket_and_local_equals?(objects),
          {:ok, _value} <- send_file(@index_file) do
       terminate(0)
       {:stop, :normal, state}
@@ -83,40 +80,6 @@ defmodule RecordingConverter do
 
       :error
     end
-  end
-
-  defp get_bucket_objects() do
-    bucket_name()
-    |> S3.list_objects(prefix: output_directory())
-    |> ExAws.request()
-  end
-
-  defp fetch_bucket_objects_name(objects) do
-    objects
-    |> Map.fetch!(:body)
-    |> Map.fetch!(:contents)
-    |> Enum.map(&Map.fetch!(&1, :key))
-  end
-
-  defp check_s3_bucket_and_local_equals?(objects) do
-    local_files = get_local_files_without_index()
-
-    local_files_paths = Enum.map(local_files, &Path.join(output_directory(), &1))
-
-    remote_files = MapSet.new(objects)
-
-    result? =
-      local_files_paths
-      |> MapSet.new()
-      |> MapSet.equal?(remote_files)
-
-    unless result? do
-      Logger.error(
-        "Files on bucket and locally are not the same, \nlocal: #{file_list_to_string(local_files_paths)},\nremote: #{file_list_to_string(objects)}"
-      )
-    end
-
-    result?
   end
 
   defp get_local_files_without_index() do
@@ -174,11 +137,5 @@ defmodule RecordingConverter do
     |> Path.split()
     |> Enum.drop(1)
     |> Path.join()
-  end
-
-  defp file_list_to_string(file_list) do
-    file_list
-    |> Enum.sort()
-    |> Enum.join(" ")
   end
 end

@@ -49,7 +49,7 @@ defmodule RecordingConverter.RecordingTest do
 
     files = PipelineTest.get_files(test_type)
 
-    setup_multipart_download_backend(bucket, report_path, output_dir_path, files, 26)
+    setup_multipart_download_backend(bucket, report_path, output_dir_path, files, 25)
 
     {:ok, pid} = RecordingConverter.start()
 
@@ -81,7 +81,7 @@ defmodule RecordingConverter.RecordingTest do
       report_path,
       "test_path/output",
       files,
-      26
+      25
     )
 
     {:ok, pid} = RecordingConverter.start()
