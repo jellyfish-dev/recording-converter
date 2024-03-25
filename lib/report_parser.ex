@@ -87,7 +87,6 @@ defmodule RecordingConverter.ReportParser do
       end)
 
     audio_end_timestamp = calculate_end_timestamp(audio_tracks)
-
     video_end_timestamp = calculate_end_timestamp(video_tracks)
 
     {audio_end_timestamp || video_end_timestamp, video_end_timestamp || audio_end_timestamp}
