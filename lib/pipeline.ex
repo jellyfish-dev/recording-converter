@@ -21,7 +21,7 @@ defmodule RecordingConverter.Pipeline do
 
     case File.ls(output_directory) do
       {:ok, files} when files != [] ->
-        Logger.warning("Some files #{Enum.join(files, " ")} are in output directory, remove them")
+        Logger.warning("Warning: Some files #{Enum.join(files, ", ")} were found in output directory. They will be removed.")
         File.rm_rf(output_directory)
 
       _other ->
