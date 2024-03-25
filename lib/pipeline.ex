@@ -47,6 +47,10 @@ defmodule RecordingConverter.Pipeline do
 
     tracks = ReportParser.get_tracks(state.bucket_name, report_path)
 
+    if Enum.empty?(tracks) do
+      raise "RecordingConverter can't do anything with recording without tracks"
+    end
+
     tracks_spec = Enum.map(tracks, &create_branch(&1, state))
 
     actions =
