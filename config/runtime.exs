@@ -18,10 +18,21 @@ if config_env() != :test do
       region: region
   end
 
-  unless is_nil(access_key_id) or is_nil(secret_access_key) do
-    config :ex_aws,
-      secret_access_key: secret_access_key,
-      access_key_id: access_key_id,
-      region: region
+  case {access_key_id, secret_access_key} do
+    {access_key_id, secret_access_key}
+    when not is_nil(access_key_id) and not is_nil(secret_access_key) ->
+      config :ex_aws,
+        secret_access_key: secret_access_key,
+        access_key_id: access_key_id,
+        region: region
+
+    {nil, nil} ->
+      nil
+
+    _other ->
+      Logger.warning("""
+      Only one of the two envs AWS_S3_ACCESS_KEY_ID and AWS_S3_SECRET_ACCESS_KEY is set.
+      In that case they are ignored.
+      """)
   end
 end

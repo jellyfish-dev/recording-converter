@@ -24,8 +24,6 @@ defmodule RecordingConverter.RecordingTest do
   end
 
   setup state do
-    kill_compositor_process()
-
     File.rmdir(state.output_path)
     File.mkdir(state.output_path)
 

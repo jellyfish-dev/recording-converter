@@ -19,13 +19,12 @@ defmodule RecordingConverter.Pipeline do
   def handle_init(_ctx, opts) do
     output_directory = opts.output_directory
 
-    case File.ls(output_directory) do
-      {:ok, files} when files != [] ->
-        Logger.warning("Warning: Some files #{Enum.join(files, ", ")} were found in output directory. They will be removed.")
-        File.rm_rf(output_directory)
+    with {:ok, files} when files != [] <- File.ls(output_directory) do
+      Logger.warning(
+        "Warning: Some files #{Enum.join(files, ", ")} were found in output directory. They will be removed."
+      )
 
-      _other ->
-        nil
+      File.rm_rf(output_directory)
     end
 
     File.mkdir_p!(output_directory)
