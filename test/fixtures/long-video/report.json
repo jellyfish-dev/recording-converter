@@ -1,0 +1,23 @@
+{
+  "tracks": {
+    "33ca088a-76c9-4493-b92a-c7ffbf92d078.msr": {
+      "offset": 7957176916,
+      "type": "video",
+      "metadata": null,
+      "encoding": "H264",
+      "clock_rate": 90000,
+      "start_timestamp": 1252237519,
+      "end_timestamp": 1255786759
+    },
+    "4a0bbdc0-c610-46a7-a574-1d0858aa65ca.msr": {
+      "offset": 0,
+      "type": "video",
+      "metadata": null,
+      "encoding": "H264",
+      "clock_rate": 90000,
+      "start_timestamp": 4135275928,
+      "end_timestamp": 4143092158
+    }
+  },
+  "recording_id": "64"
+}

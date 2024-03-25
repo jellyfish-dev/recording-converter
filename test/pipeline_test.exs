@@ -46,108 +46,40 @@ defmodule RecordingConverter.PipelineTest do
     state
   end
 
-  test "one audio, one video is correctly converted",
-       %{
-         output_path: output_dir_path
-       } = state do
-    test_type = "/one-audio-one-video/"
+  tests = [
+    %{type: "one-audio-one-video", requests: 10, factor: 1},
+    %{type: "one-audio", requests: 4, factor: 1},
+    %{type: "one-video", requests: 8, factor: 1},
+    %{type: "multiple-audios-and-videos", requests: 18, factor: 1},
+    %{type: "long-video", requests: 16, factor: 5}
+  ]
 
-    test_fixtures_path = @fixtures <> test_type
+  for test <- tests do
+    @tag timeout: 180_000
+    test "#{test.type} is correctly converted", state do
+      test_type = "/#{unquote(test.type)}/"
+      files = get_files(test_type)
+      setup_multipart_download_backend(files, unquote(test.requests))
 
-    files =
-      test_fixtures_path
-      |> File.ls!()
-      |> Map.new(fn file_name ->
-        {file_name, File.read!(test_fixtures_path <> file_name)}
-      end)
+      pipeline = start_pipeline(state)
 
-    setup_multipart_download_backend(files, 10)
+      monitor_ref = Process.monitor(pipeline)
 
-    pipeline = start_pipeline(state)
+      assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal},
+                     @wait_for_pipeline * unquote(test.factor)
 
-    monitor_ref = Process.monitor(pipeline)
-
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
-
-    assert_pipeline_output(output_dir_path)
+      assert_pipeline_output(state.output_path)
+    end
   end
 
-  test "one audio is correctly converted",
-       %{
-         output_path: output_dir_path
-       } = state do
-    test_type = "/one-audio/"
-
+  def get_files(test_type) do
     test_fixtures_path = @fixtures <> test_type
 
-    files =
-      test_fixtures_path
-      |> File.ls!()
-      |> Map.new(fn file_name ->
-        {file_name, File.read!(test_fixtures_path <> file_name)}
-      end)
-
-    setup_multipart_download_backend(files, 4)
-
-    pipeline = start_pipeline(state)
-
-    monitor_ref = Process.monitor(pipeline)
-
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
-
-    assert_pipeline_output(output_dir_path)
-  end
-
-  test "one video is correctly converted",
-       %{
-         output_path: output_dir_path
-       } = state do
-    test_type = "/one-video/"
-
-    test_fixtures_path = @fixtures <> test_type
-
-    files =
-      test_fixtures_path
-      |> File.ls!()
-      |> Map.new(fn file_name ->
-        {file_name, File.read!(test_fixtures_path <> file_name)}
-      end)
-
-    setup_multipart_download_backend(files, 8)
-
-    pipeline = start_pipeline(state)
-
-    monitor_ref = Process.monitor(pipeline)
-
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
-
-    assert_pipeline_output(output_dir_path)
-  end
-
-  test "multiple audios, multiple videos is correctly converted",
-       %{
-         output_path: output_dir_path
-       } = state do
-    test_type = "/multiple-audios-and-videos/"
-
-    test_fixtures_path = @fixtures <> test_type
-
-    files =
-      test_fixtures_path
-      |> File.ls!()
-      |> Map.new(fn file_name ->
-        {file_name, File.read!(test_fixtures_path <> file_name)}
-      end)
-
-    setup_multipart_download_backend(files, 18)
-
-    pipeline = start_pipeline(state)
-
-    monitor_ref = Process.monitor(pipeline)
-
-    assert_receive {:DOWN, ^monitor_ref, :process, _pipeline_pid, :normal}, @wait_for_pipeline
-
-    assert_pipeline_output(output_dir_path)
+    test_fixtures_path
+    |> File.ls!()
+    |> Map.new(fn file_name ->
+      {file_name, File.read!(test_fixtures_path <> file_name)}
+    end)
   end
 
   @spec request_handler(
