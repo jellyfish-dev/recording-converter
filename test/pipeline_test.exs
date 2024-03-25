@@ -1,5 +1,5 @@
 defmodule RecordingConverter.PipelineTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case
 
   import Mox
 
@@ -217,7 +217,7 @@ defmodule RecordingConverter.PipelineTest do
   end
 
   defp assert_file_exist!(file, dir_path) when is_binary(file) do
-    file_path = dir_path <> file
+    file_path = Path.join([".", dir_path, file])
     {result, file} = File.read(file_path)
 
     dir_files = File.ls!(dir_path) |> Enum.join(" ")
@@ -225,7 +225,7 @@ defmodule RecordingConverter.PipelineTest do
 
     assert(
       result == :ok,
-      "File that doesn't exists: #{file_path},\n dir/files: #{dir_files},\n ./files: #{local_files}"
+      "File that doesn't exists: #{file_path},\n dir/files (#{dir_path}): #{dir_files},\n ./files: #{local_files}"
     )
 
     assert byte_size(file) > 0
@@ -249,7 +249,7 @@ defmodule RecordingConverter.PipelineTest do
                  output_directory:
                    if(String.starts_with?(state.output_path, "."),
                      do: "test_path/output",
-                     else: "test_path/"
+                     else: "output/"
                    ),
                  compositor_path: state.compositor_path
                }
