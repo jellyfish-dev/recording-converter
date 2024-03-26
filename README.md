@@ -1,34 +1,26 @@
-# Membrane Template Plugin
+# Recording Converter
 
-[![Hex.pm](https://img.shields.io/hexpm/v/membrane_template_plugin.svg)](https://hex.pm/packages/membrane_template_plugin)
-[![API Docs](https://img.shields.io/badge/api-docs-yellow.svg?style=flat)](https://hexdocs.pm/membrane_template_plugin)
-[![CircleCI](https://circleci.com/gh/membraneframework/membrane_template_plugin.svg?style=svg)](https://circleci.com/gh/membraneframework/membrane_template_plugin)
+[![codecov](https://codecov.io/gh/jellyfish-dev/recording-converter/branch/main/graph/badge.svg?token=ANWFKV2EDP)](https://codecov.io/gh/jellyfish-dev/recording-converter)
+[![CircleCI](https://circleci.com/gh/jellyfish-dev/recording-converter.svg?style=svg)](https://circleci.com/gh/jellyfish-dev/recording-converter)
 
-This repository contains a template for new plugins.
+Recording Converter is a docker image that allows to convert recording created with the use of [RecordingComponent](https://jellyfish-dev.github.io/jellyfish-docs/next/getting_started/components/recording) in Jellyfish to HLS.
 
-Check out different branches for other flavors of this template.
+The environment variables possible to pass are:
+* `AWS_S3_ACCESS_KEY_ID` - access key ID to S3 bucket
+* `AWS_S3_SECRET_ACCESS_KEY` - secret access key to S3 bucket
+* `AWS_S3_REGION` - a region on which the bucket is stored
+* `BUCKET_NAME` - name of the bucket
+* `REPORT_PATH` - path to `report.json` on the S3 bucket
+* `OUTPUT_DIRECTORY_PATH` - output path in S3 bucket, it can be absolute or relative to the path of the report
 
-It's a part of the [Membrane Framework](https://membrane.stream).
+### Example
+In the example directory there is `script.sh` that allows to build a docker image from sources and run it with envs provided in `.env` file.
 
-## Installation
-
-The package can be installed by adding `membrane_template_plugin` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:membrane_template_plugin, "~> 0.1.0"}
-  ]
-end
-```
-
-## Usage
-
-TODO
+The `upload_directory.exs` file provides a bunch of functions that allow to upload, list and delete files on S3 bucket.
 
 ## Copyright and License
 
-Copyright 2020, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane_template_plugin)
+Copyright 2024, [Software Mansion](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane_template_plugin)
 
 [![Software Mansion](https://logo.swmansion.com/logo?color=white&variant=desktop&width=200&tag=membrane-github)](https://swmansion.com/?utm_source=git&utm_medium=readme&utm_campaign=membrane_template_plugin)
 
