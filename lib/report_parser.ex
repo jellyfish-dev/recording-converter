@@ -20,10 +20,11 @@ defmodule RecordingConverter.ReportParser do
     tracks_actions = get_track_actions(tracks)
 
     update_scene_notifications = create_update_scene_notifications(tracks_actions)
-    unregister_output_actions = generate_unregister_output_actions(tracks_actions)
-    unregister_input_actions = generate_unregister_input_actions(tracks_actions)
+    # unregister_output_actions = generate_unregister_output_actions(tracks_actions)
+    # unregister_input_actions = generate_unregister_input_actions(tracks_actions)
 
-    update_scene_notifications ++ unregister_input_actions ++ unregister_output_actions
+    # update_scene_notifications ++ unregister_input_actions ++ unregister_output_actions
+    update_scene_notifications
   end
 
   defp get_report(bucket_name, report_path) do
@@ -62,8 +63,7 @@ defmodule RecordingConverter.ReportParser do
   end
 
   defp generate_unregister_output_actions(track_actions) do
-    {audio_end_timestamp, video_end_timestamp} =
-      get_audio_and_video_end_timestamp(track_actions)
+    {audio_end_timestamp, video_end_timestamp} = get_audio_and_video_end_timestamp(track_actions)
 
     [
       Compositor.schedule_unregister_audio_output(audio_end_timestamp),
