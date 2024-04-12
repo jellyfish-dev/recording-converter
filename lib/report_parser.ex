@@ -21,11 +21,8 @@ defmodule RecordingConverter.ReportParser do
 
     update_scene_notifications = create_update_scene_notifications(tracks_actions)
     unregister_output_actions = generate_unregister_output_actions(tracks_actions)
-    # unregister_input_actions = generate_unregister_input_actions(tracks_actions)
 
-    # update_scene_notifications ++ unregister_input_actions ++ unregister_output_actions
     update_scene_notifications ++ unregister_output_actions
-    # update_scene_notifications
   end
 
   defp get_report(bucket_name, report_path) do
