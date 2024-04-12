@@ -146,7 +146,8 @@ defmodule RecordingConverter.Pipeline do
         initial:
           Compositor.scene([
             %{type: :input_stream, input_id: "video_input_0", id: "child_0"}
-          ])
+          ]),
+        send_eos_when: :all_inputs
       ]
     )
     |> child(:output_video_parser, %Membrane.H264.Parser{
@@ -175,7 +176,8 @@ defmodule RecordingConverter.Pipeline do
           inputs: [
             %{input_id: "audio_input_0", volume: 0.2}
           ]
-        }
+        },
+        send_eos_when: :all_inputs
       ]
     )
     |> child(:opus_output_parser, Membrane.Opus.Parser)
