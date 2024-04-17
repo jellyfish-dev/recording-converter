@@ -21,7 +21,7 @@ RUN apt-get update -y -qq && \
 RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 RUN source ~/.cargo/env && rustup install $RUST_VERSION && rustup default $RUST_VERSION
 
-RUN git clone https://github.com/membraneframework/video_compositor.git && cd video_compositor && git checkout 7d0a8be312de17043aebdbcea19b43a3ce1138eb
+RUN git clone https://github.com/membraneframework/video_compositor.git && cd video_compositor && git checkout 84f8fb8c0d0dbe52e6e449ae66c887804764c6e3
 
 RUN mv video_compositor /root/project
 

@@ -21,9 +21,8 @@ defmodule RecordingConverter.ReportParser do
 
     update_scene_notifications = create_update_scene_notifications(tracks_actions)
     unregister_output_actions = generate_unregister_output_actions(tracks_actions)
-    unregister_input_actions = generate_unregister_input_actions(tracks_actions)
 
-    update_scene_notifications ++ unregister_input_actions ++ unregister_output_actions
+    update_scene_notifications ++ unregister_output_actions
   end
 
   defp get_report(bucket_name, report_path) do
@@ -62,22 +61,21 @@ defmodule RecordingConverter.ReportParser do
   end
 
   defp generate_unregister_output_actions(track_actions) do
-    {audio_end_timestamp, video_end_timestamp} =
-      get_audio_and_video_end_timestamp(track_actions)
+    {audio_end_timestamp, video_end_timestamp} = get_audio_and_video_end_timestamp(track_actions)
 
-    [
-      Compositor.schedule_unregister_audio_output(audio_end_timestamp),
-      Compositor.schedule_unregister_video_output(video_end_timestamp)
-    ]
-    |> Enum.reject(&is_nil(&1))
-  end
+    case {audio_end_timestamp, video_end_timestamp} do
+      {nil, nil} ->
+        []
 
-  defp generate_unregister_input_actions(track_actions) do
-    track_actions
-    |> Enum.filter(fn {atom, _track, _offset} -> atom == :end end)
-    |> Enum.map(fn {_atom, track, offset} ->
-      Compositor.schedule_unregister_input(offset, track.id)
-    end)
+      {nil, timestamp} ->
+        [Compositor.schedule_unregister_audio_output(timestamp)]
+
+      {timestamp, nil} ->
+        [Compositor.schedule_unregister_video_output(timestamp)]
+
+      _other ->
+        []
+    end
   end
 
   defp get_audio_and_video_end_timestamp(track_actions) do
@@ -89,7 +87,7 @@ defmodule RecordingConverter.ReportParser do
     audio_end_timestamp = calculate_end_timestamp(audio_tracks)
     video_end_timestamp = calculate_end_timestamp(video_tracks)
 
-    {audio_end_timestamp || video_end_timestamp, video_end_timestamp || audio_end_timestamp}
+    {audio_end_timestamp, video_end_timestamp}
   end
 
   defp calculate_track_duration(track) do

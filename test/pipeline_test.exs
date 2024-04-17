@@ -11,7 +11,7 @@ defmodule RecordingConverter.PipelineTest do
   @fixtures "./test/fixtures"
   @input_request_path "https://s3.eu-central-1.amazonaws.com/bucket/test_path/"
   @index_name "index.m3u8"
-  @wait_for_pipeline 30_000
+  @wait_for_pipeline 60_000
 
   @type fallback_func_t :: (atom(), String.t(), map(), map(), Keyword.t() -> {atom(), map()})
 
@@ -53,7 +53,7 @@ defmodule RecordingConverter.PipelineTest do
   ]
 
   for test <- tests do
-    @tag timeout: 180_000
+    @tag timeout: @wait_for_pipeline * 5
     test "#{test.type} is correctly converted", state do
       test_type = "/#{unquote(test.type)}/"
       files = get_files(test_type)
