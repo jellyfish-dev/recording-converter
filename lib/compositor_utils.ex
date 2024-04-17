@@ -80,6 +80,20 @@ defmodule RecordingConverter.Compositor do
       }
     }
 
+  @spec register_image_action(String.t()) :: {:lc_request, map()}
+  def register_image_action(image_url) do
+    {
+      :lc_request,
+      %{
+        type: "register",
+        entity_type: "image",
+        asset_type: "png",
+        image_id: "avatar_png",
+        url: image_url
+      }
+    }
+  end
+
   defp generate_video_output_update(
          %{"video" => video_tracks, "audio" => audio_tracks},
          timestamp
