@@ -51,13 +51,14 @@ defmodule RecordingConverter.ReportParser do
     |> Enum.map_reduce(%{"audio" => [], "video" => []}, fn
       {:start, %{"type" => type} = track, timestamp}, acc ->
         acc = Map.update!(acc, type, &[track | &1])
-        {Compositor.generate_output_update(type, acc[type], timestamp), acc}
+        {Compositor.generate_output_update(acc, timestamp), acc}
 
       {:end, %{"type" => type} = track, timestamp}, acc ->
         acc = Map.update!(acc, type, fn tracks -> Enum.reject(tracks, &(&1 == track)) end)
-        {Compositor.generate_output_update(type, acc[type], timestamp), acc}
+        {Compositor.generate_output_update(acc, timestamp), acc}
     end)
     |> then(fn {actions, _acc} -> actions end)
+    |> List.flatten()
   end
 
   defp generate_unregister_output_actions(track_actions) do

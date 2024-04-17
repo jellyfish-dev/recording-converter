@@ -1,6 +1,8 @@
 defmodule RecordingConverter.Compositor do
   @moduledoc false
 
+  @text_margin 10
+  @letter_width 12
   @output_width 1280
   @output_height 720
   @video_output_id "video_output_1"
@@ -35,35 +37,12 @@ defmodule RecordingConverter.Compositor do
   @spec video_output_id() :: String.t()
   def video_output_id(), do: @video_output_id
 
-  @spec generate_output_update(String.t(), list(), number()) :: tuple()
-  def generate_output_update("video", video_tracks, timestamp) when is_list(video_tracks) do
-    {
-      :lc_request,
-      %{
-        type: :update_output,
-        output_id: @video_output_id,
-        video:
-          video_tracks
-          |> Enum.map(&%{type: :input_stream, input_id: &1.id})
-          |> scene(),
-        schedule_time_ms: from_ns_to_ms(timestamp)
-      }
-    }
-  end
-
-  def generate_output_update("audio", audio_tracks, timestamp) when is_list(audio_tracks) do
-    {
-      :lc_request,
-      %{
-        type: :update_output,
-        output_id: @audio_output_id,
-        audio: %{
-          inputs: Enum.map(audio_tracks, &%{input_id: &1.id})
-        },
-        schedule_time_ms: from_ns_to_ms(timestamp)
-      }
-    }
-  end
+  @spec generate_output_update(map(), number()) :: [tuple()]
+  def generate_output_update(tracks, timestamp),
+    do: [
+      generate_video_output_update(tracks, timestamp),
+      generate_audio_output_update(tracks, timestamp)
+    ]
 
   @spec schedule_unregister_video_output(number()) :: {:lc_request, map()}
   def schedule_unregister_video_output(schedule_time_ns),
@@ -100,6 +79,107 @@ defmodule RecordingConverter.Compositor do
         schedule_time_ms: from_ns_to_ms(schedule_time_ns)
       }
     }
+
+  defp generate_video_output_update(
+         %{"video" => video_tracks, "audio" => audio_tracks},
+         timestamp
+       )
+       when is_list(video_tracks) do
+    video_tracks_id = Enum.map(video_tracks, fn track -> track["origin"] end)
+    avatar_tracks = Enum.reject(audio_tracks, fn track -> track["origin"] in video_tracks_id end)
+
+    avatars_config = Enum.map(avatar_tracks, &avatar_view/1)
+    video_tracks_config = Enum.map(video_tracks, &video_input_source_view/1)
+
+    {
+      :lc_request,
+      %{
+        type: :update_output,
+        output_id: @video_output_id,
+        schedule_time_ms: from_ns_to_ms(timestamp),
+        video: scene(video_tracks_config ++ avatars_config)
+      }
+    }
+  end
+
+  defp generate_audio_output_update(%{"audio" => audio_tracks}, timestamp)
+       when is_list(audio_tracks) do
+    {
+      :lc_request,
+      %{
+        type: :update_output,
+        output_id: @audio_output_id,
+        audio: %{
+          inputs: Enum.map(audio_tracks, &%{input_id: &1.id})
+        },
+        schedule_time_ms: from_ns_to_ms(timestamp)
+      }
+    }
+  end
+
+  defp video_input_source_view(track) do
+    %{
+      type: :view,
+      children:
+        [
+          # TODO: fix after compositor update
+          # unnecessary rescaler
+          %{
+            type: "rescaler",
+            mode: "fit",
+            child: %{
+              type: :input_stream,
+              input_id: track.id
+            }
+          }
+        ] ++ text_view(track["metadata"])
+    }
+  end
+
+  defp avatar_view(track) do
+    %{
+      type: "view",
+      children:
+        [
+          # TODO: fix after compositor update
+          # unnecessary rescaler
+          %{
+            type: "rescaler",
+            mode: "fit",
+            child: %{
+              type: "image",
+              image_id: "avatar_png"
+            }
+          }
+        ] ++ text_view(track["metadata"])
+    }
+  end
+
+  defp text_view(%{"displayName" => label}) do
+    label_width = String.length(label) * @letter_width + @text_margin
+
+    [
+      %{
+        type: "view",
+        bottom: 20,
+        right: 20,
+        width: label_width,
+        height: 20,
+        background_color_rgba: "#000000FF",
+        children: [
+          %{
+            type: "text",
+            text: label,
+            align: "center",
+            width: label_width,
+            font_size: 20.0
+          }
+        ]
+      }
+    ]
+  end
+
+  defp text_view(_metadata), do: []
 
   defp from_ns_to_ms(timestamp_ns) do
     rounded_ts =

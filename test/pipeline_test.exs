@@ -49,6 +49,7 @@ defmodule RecordingConverter.PipelineTest do
     %{type: "one-audio", requests: 4, factor: 1},
     %{type: "one-video", requests: 8, factor: 1},
     %{type: "multiple-audios-and-videos", requests: 18, factor: 1},
+    %{type: "multiple-audios-and-one-video", requests: 12, factor: 1},
     %{type: "long-video", requests: 16, factor: 5}
   ]
 
@@ -182,7 +183,8 @@ defmodule RecordingConverter.PipelineTest do
                      do: "test_path/output",
                      else: "output/"
                    ),
-                 compositor_path: state.compositor_path
+                 compositor_path: state.compositor_path,
+                 image_url: Application.fetch_env!(:recording_converter, :image_url)
                }
              )
 

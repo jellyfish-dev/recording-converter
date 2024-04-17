@@ -52,12 +52,12 @@ defmodule RecordingConverter.Pipeline do
 
     tracks_spec = Enum.map(tracks, &create_branch(&1, state))
 
-    actions =
+    track_actions =
       tracks
       |> ReportParser.get_all_track_actions()
       |> Enum.map(&notify_compositor/1)
 
-    actions = [{:spec, tracks_spec} | actions]
+    actions = [{:spec, tracks_spec}, register_image_action(state.image_url) | track_actions]
 
     {actions,
      %{
@@ -247,6 +247,21 @@ defmodule RecordingConverter.Pipeline do
 
   defp s3_file_path(file, state) do
     Path.join(state.s3_directory, file)
+  end
+
+  defp register_image_action(image_url) do
+    register_image = {
+      :lc_request,
+      %{
+        type: "register",
+        entity_type: "image",
+        asset_type: "png",
+        image_id: "avatar_png",
+        url: image_url
+      }
+    }
+
+    notify_compositor(register_image)
   end
 
   defp notify_compositor(notification) do
