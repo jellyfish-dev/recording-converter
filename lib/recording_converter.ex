@@ -29,7 +29,8 @@ defmodule RecordingConverter do
         bucket_name: bucket_name(),
         compositor_path: compositor_path(),
         s3_directory: s3_directory(),
-        output_directory: output_directory()
+        output_directory: output_directory(),
+        image_url: image_url()
       })
 
     Process.monitor(pipeline_pid)
@@ -128,6 +129,10 @@ defmodule RecordingConverter do
     else
       output_directory
     end
+  end
+
+  defp image_url() do
+    Application.fetch_env!(:recording_converter, :image_url)
   end
 
   defp convert_to_absolute_path(output_directory) do

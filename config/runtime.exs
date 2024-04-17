@@ -1,7 +1,8 @@
 import Config
 
 config :recording_converter,
-  compositor_path: System.get_env("COMPOSITOR_PATH")
+  compositor_path: System.get_env("COMPOSITOR_PATH"),
+  image_url: System.get_env("IMAGE_URL", "https://cdn-icons-png.flaticon.com/512/149/149071.png")
 
 if config_env() != :test do
   config :recording_converter,

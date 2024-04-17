@@ -52,12 +52,15 @@ defmodule RecordingConverter.Pipeline do
 
     tracks_spec = Enum.map(tracks, &create_branch(&1, state))
 
-    actions =
+    track_actions =
       tracks
       |> ReportParser.get_all_track_actions()
       |> Enum.map(&notify_compositor/1)
 
-    actions = [{:spec, tracks_spec} | actions]
+    register_image_action =
+      state.image_url |> Compositor.register_image_action() |> notify_compositor()
+
+    actions = [{:spec, tracks_spec}, register_image_action | track_actions]
 
     {actions,
      %{
