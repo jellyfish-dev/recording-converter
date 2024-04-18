@@ -6,6 +6,7 @@ config :recording_converter,
 
 if config_env() != :test do
   config :recording_converter,
+    start_recording_converter?: true,
     bucket_name: System.fetch_env!("BUCKET_NAME"),
     report_path: System.fetch_env!("REPORT_PATH"),
     output_dir_path: System.fetch_env!("OUTPUT_DIRECTORY_PATH")
