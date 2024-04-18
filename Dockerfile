@@ -1,33 +1,33 @@
-# Builder image
-FROM ubuntu:mantic-20231011 as builder
+# # Builder image
+# FROM ubuntu:mantic-20231011 as builder
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-ARG USERNAME=compositor
-ARG RUST_VERSION=1.74
+# ARG USERNAME=compositor
+# ARG RUST_VERSION=1.74
 
-ENV DEBIAN_FRONTEND=noninteractive
-# Set locale to UTF-8
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
+# ENV DEBIAN_FRONTEND=noninteractive
+# # Set locale to UTF-8
+# ENV LANG C.UTF-8
+# ENV LC_ALL C.UTF-8
 
-RUN apt-get update -y -qq && \
-  apt-get install -y \
-  build-essential curl pkg-config libssl-dev libclang-dev git sudo \
-  libegl1-mesa-dev libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers \
-  ffmpeg libavcodec-dev libavformat-dev libavfilter-dev libavdevice-dev libopus-dev && \
-  rm -rf /var/lib/apt/lists/*
+# RUN apt-get update -y -qq && \
+#   apt-get install -y \
+#   build-essential curl pkg-config libssl-dev libclang-dev git sudo \
+#   libegl1-mesa-dev libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers \
+#   ffmpeg libavcodec-dev libavformat-dev libavfilter-dev libavdevice-dev libopus-dev && \
+#   rm -rf /var/lib/apt/lists/*
 
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
-RUN source ~/.cargo/env && rustup install $RUST_VERSION && rustup default $RUST_VERSION
+# RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+# RUN source ~/.cargo/env && rustup install $RUST_VERSION && rustup default $RUST_VERSION
 
-RUN git clone https://github.com/membraneframework/video_compositor.git && cd video_compositor && git checkout 84f8fb8c0d0dbe52e6e449ae66c887804764c6e3
+# # RUN git clone https://github.com/membraneframework/video_compositor.git && cd video_compositor && git checkout 84f8fb8c0d0dbe52e6e449ae66c887804764c6e3
 
-RUN mv video_compositor /root/project
+# # RUN mv video_compositor /root/project
 
-WORKDIR /root/project
+# # WORKDIR /root/project
 
-RUN source ~/.cargo/env && cargo build --release --no-default-features
+# # RUN source ~/.cargo/env && cargo build --release --no-default-features
 
 FROM ubuntu:mantic-20231011 as build_elixir
 
@@ -212,8 +212,8 @@ ENV LIVE_COMPOSITOR_WEB_RENDERER_ENABLE=0
 ENV LIVE_COMPOSITOR_WEB_RENDERER_GPU_ENABLE=0
 
 
-COPY --from=builder /root/project/target/release compositor
-ENV COMPOSITOR_PATH=/app/compositor/video_compositor
+# COPY --from=builder /root/project/target/release compositor
+# ENV COMPOSITOR_PATH=/app/compositor/video_compositor
 
 RUN mix local.hex --force && \
   mix local.rebar --force
@@ -236,7 +236,7 @@ RUN mix do compile, release
 # Runtime image
 FROM ubuntu:mantic-20231011
 
-ENV COMPOSITOR_PATH=/app/compositor/video_compositor
+# ENV COMPOSITOR_PATH=/app/compositor/video_compositor
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -282,7 +282,7 @@ RUN apt remove build-essential -y \
 WORKDIR /app
 
 COPY --from=build_elixir /app/_build/prod/rel/recording_converter ./
-COPY --from=builder /root/project/target/release compositor
+# COPY --from=builder /root/project/target/release compositor
 
 RUN mkdir output
 
