@@ -22,7 +22,7 @@ jobs:
           paths:
             - deps
       - run: MIX_ENV=test mix compile --force
-      - run: mix test --warnings-as-errors
+      - run: mix test --warnings-as-errors --no-start
 
 
 
