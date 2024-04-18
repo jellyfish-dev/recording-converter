@@ -143,7 +143,7 @@ defmodule RecordingConverter.Pipeline do
     get_child(:video_compositor)
     |> via_out(Pad.ref(:video_output, Compositor.video_output_id()),
       options: [
-        encoder_preset: :slow,
+        encoder_preset: :medium,
         width: @output_width,
         height: @output_height,
         initial:
