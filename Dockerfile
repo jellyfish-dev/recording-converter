@@ -5,6 +5,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG USERNAME=compositor
 ARG RUST_VERSION=1.74
+ARG LIVE_COMPOSITOR_LOGGER_LEVEL="debug,wgpu_hal=warn,wgpu_core=warn,naga=warn"
 
 ENV DEBIAN_FRONTEND=noninteractive
 # Set locale to UTF-8
@@ -210,6 +211,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility
 ENV LIVE_COMPOSITOR_WEB_RENDERER_ENABLE=0
 ENV LIVE_COMPOSITOR_WEB_RENDERER_GPU_ENABLE=0
+ARG LIVE_COMPOSITOR_LOGGER_LEVEL="debug,wgpu_hal=warn,wgpu_core=warn,naga=warn"
 
 
 COPY --from=builder /root/project/target/release compositor
@@ -242,6 +244,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility
+ARG LIVE_COMPOSITOR_LOGGER_LEVEL="debug,wgpu_hal=warn,wgpu_core=warn,naga=warn"
 
 # Set locale to UTF-8
 ENV LANG C.UTF-8
