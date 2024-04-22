@@ -169,7 +169,7 @@ defmodule RecordingConverter.Pipeline do
   defp generate_output_audio_branch(state) do
     child(:video_compositor, %Membrane.LiveCompositor{
       framerate: {30, 1},
-      composing_strategy: :ahead_of_time,
+      composing_strategy: :offline_processing,
       server_setup: Compositor.server_setup(state.compositor_path)
     })
     |> via_out(Pad.ref(:audio_output, Compositor.audio_output_id()),
