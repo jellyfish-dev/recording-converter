@@ -1,8 +1,8 @@
 defmodule RecordingConverter.Compositor do
   @moduledoc false
 
-  @text_margin 10
-  @letter_width 12
+  alias Membrane.LiveCompositor.Request
+
   @output_width 1280
   @output_height 720
   @video_output_id "video_output_1"
@@ -44,53 +44,33 @@ defmodule RecordingConverter.Compositor do
       generate_audio_output_update(tracks, timestamp)
     ]
 
-  @spec schedule_unregister_video_output(number()) :: {:lc_request, map()}
+  @spec schedule_unregister_video_output(number()) :: Request.t()
   def schedule_unregister_video_output(schedule_time_ns),
-    do: {
-      :lc_request,
-      %{
-        type: :unregister,
-        entity_type: :output_stream,
-        output_id: @video_output_id,
-        schedule_time_ms: from_ns_to_ms(schedule_time_ns)
-      }
+    do: %Request.UnregisterOutput{
+      output_id: @video_output_id,
+      schedule_time: Membrane.Time.nanoseconds(schedule_time_ns)
     }
 
-  @spec schedule_unregister_audio_output(number()) :: {:lc_request, map()}
+  @spec schedule_unregister_audio_output(number()) :: Request.t()
   def schedule_unregister_audio_output(schedule_time_ns),
-    do: {
-      :lc_request,
-      %{
-        type: :unregister,
-        entity_type: :output_stream,
-        output_id: @audio_output_id,
-        schedule_time_ms: from_ns_to_ms(schedule_time_ns)
-      }
+    do: %Request.UnregisterOutput{
+      output_id: @audio_output_id,
+      schedule_time: Membrane.Time.nanoseconds(schedule_time_ns)
     }
 
-  @spec schedule_unregister_input(number(), binary()) :: {:lc_request, map()}
+  @spec schedule_unregister_input(number(), binary()) :: Request.t()
   def schedule_unregister_input(schedule_time_ns, input_id),
-    do: {
-      :lc_request,
-      %{
-        type: :unregister,
-        entity_type: :input_stream,
-        input_id: input_id,
-        schedule_time_ms: from_ns_to_ms(schedule_time_ns)
-      }
+    do: %Request.UnregisterInput{
+      input_id: input_id,
+      schedule_time: Membrane.Time.nanoseconds(schedule_time_ns)
     }
 
-  @spec register_image_action(String.t()) :: {:lc_request, map()}
+  @spec register_image_action(String.t()) :: Request.t()
   def register_image_action(image_url) do
-    {
-      :lc_request,
-      %{
-        type: "register",
-        entity_type: "image",
-        asset_type: "png",
-        image_id: "avatar_png",
-        url: image_url
-      }
+    %Request.RegisterImage{
+      asset_type: :png,
+      image_id: "avatar_png",
+      url: image_url
     }
   end
 
@@ -105,29 +85,19 @@ defmodule RecordingConverter.Compositor do
     avatars_config = Enum.map(avatar_tracks, &avatar_view/1)
     video_tracks_config = Enum.map(video_tracks, &video_input_source_view/1)
 
-    {
-      :lc_request,
-      %{
-        type: :update_output,
-        output_id: @video_output_id,
-        schedule_time_ms: from_ns_to_ms(timestamp),
-        video: scene(video_tracks_config ++ avatars_config)
-      }
+    %Request.UpdateVideoOutput{
+      output_id: @video_output_id,
+      schedule_time: Membrane.Time.nanoseconds(timestamp),
+      root: scene(video_tracks_config ++ avatars_config)
     }
   end
 
   defp generate_audio_output_update(%{"audio" => audio_tracks}, timestamp)
        when is_list(audio_tracks) do
-    {
-      :lc_request,
-      %{
-        type: :update_output,
-        output_id: @audio_output_id,
-        audio: %{
-          inputs: Enum.map(audio_tracks, &%{input_id: &1.id})
-        },
-        schedule_time_ms: from_ns_to_ms(timestamp)
-      }
+    %Request.UpdateAudioOutput{
+      output_id: @audio_output_id,
+      inputs: Enum.map(audio_tracks, &%{input_id: &1.id}),
+      schedule_time: Membrane.Time.nanoseconds(timestamp)
     }
   end
 
@@ -136,10 +106,8 @@ defmodule RecordingConverter.Compositor do
       type: :view,
       children:
         [
-          # TODO: fix after compositor update
-          # unnecessary rescaler
           %{
-            type: "rescaler",
+            type: :rescaler,
             mode: "fit",
             child: %{
               type: :input_stream,
@@ -152,16 +120,14 @@ defmodule RecordingConverter.Compositor do
 
   defp avatar_view(track) do
     %{
-      type: "view",
+      type: :view,
       children:
         [
-          # TODO: fix after compositor update
-          # unnecessary rescaler
           %{
-            type: "rescaler",
+            type: :rescaler,
             mode: "fit",
             child: %{
-              type: "image",
+              type: :image,
               image_id: "avatar_png"
             }
           }
@@ -170,35 +136,25 @@ defmodule RecordingConverter.Compositor do
   end
 
   defp text_view(%{"displayName" => label}) do
-    label_width = String.length(label) * @letter_width + @text_margin
-
     [
       %{
-        type: "view",
+        type: :view,
         bottom: 20,
         right: 20,
-        width: label_width,
         height: 20,
         background_color_rgba: "#000000FF",
         children: [
+          %{type: :view},
           %{
-            type: "text",
+            type: :text,
             text: label,
-            align: "center",
-            width: label_width,
             font_size: 20.0
-          }
+          },
+          %{type: :view}
         ]
       }
     ]
   end
 
   defp text_view(_metadata), do: []
-
-  defp from_ns_to_ms(timestamp_ns) do
-    rounded_ts =
-      timestamp_ns |> Membrane.Time.nanoseconds() |> Membrane.Time.as_milliseconds(:round)
-
-    max(0, rounded_ts - 10)
-  end
 end

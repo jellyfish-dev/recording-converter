@@ -6,7 +6,7 @@ defmodule RecordingConverter.Pipeline do
 
   alias Membrane.AWS.S3.Source
   alias Membrane.HTTPAdaptiveStream.{SinkBin, Storages}
-  alias Membrane.Time
+  alias Membrane.LiveCompositor
   alias RecordingConverter.{Compositor, ReportParser}
 
   @segment_duration 3
@@ -80,7 +80,7 @@ defmodule RecordingConverter.Pipeline do
       when msg_type == :output_registered or msg_type == :input_registered do
     state = %{state | registered_compositor_streams: state.registered_compositor_streams + 1}
 
-    if state.registered_compositor_streams == state.tracks do
+    if state.registered_compositor_streams == state.tracks + 2 do
       # send start when all inputs are connected
       {[notify_compositor(:start_composing)], state}
     else
@@ -90,22 +90,14 @@ defmodule RecordingConverter.Pipeline do
 
   @impl true
   def handle_child_notification(
-        {:lc_request_response, req, %Req.Response{status: response_code, body: response_body},
-         _lc_ctx},
+        {:request_result, _req, {:error, error}, _lc_ctx},
         _child,
         _membrane_ctx,
-        state
+        _state
       ) do
-    if response_code != 200 do
-      raise """
-      Request failed.
-      Request: `#{inspect(req)}.
-      Response code: #{response_code}.
-      Response body: #{inspect(response_body)}.
-      """
-    end
-
-    {[], state}
+    raise """
+    Request failed. #{inspect(error)}
+    """
   end
 
   @impl true
@@ -143,14 +135,14 @@ defmodule RecordingConverter.Pipeline do
     get_child(:video_compositor)
     |> via_out(Pad.ref(:video_output, Compositor.video_output_id()),
       options: [
-        encoder_preset: :slow,
         width: @output_width,
         height: @output_height,
-        initial:
-          Compositor.scene([
-            %{type: :input_stream, input_id: "video_input_0", id: "child_0"}
-          ]),
-        send_eos_when: :all_inputs
+        encoder: %LiveCompositor.Encoder.FFmpegH264{
+          preset: :slow
+        },
+        initial: %{
+          root: Compositor.scene([])
+        }
       ]
     )
     |> child(:output_video_parser, %Membrane.H264.Parser{
@@ -160,7 +152,7 @@ defmodule RecordingConverter.Pipeline do
     |> via_in(Pad.ref(:input, :video),
       options: [
         encoding: :H264,
-        segment_duration: Time.seconds(@segment_duration)
+        segment_duration: Membrane.Time.seconds(@segment_duration)
       ]
     )
     |> get_child(:hls_sink_bin)
@@ -174,13 +166,12 @@ defmodule RecordingConverter.Pipeline do
     })
     |> via_out(Pad.ref(:audio_output, Compositor.audio_output_id()),
       options: [
-        channels: :stereo,
-        initial: %{
-          inputs: [
-            %{input_id: "audio_input_0", volume: 0.2}
-          ]
+        encoder: %LiveCompositor.Encoder.Opus{
+          channels: :stereo
         },
-        send_eos_when: :all_inputs
+        initial: %{
+          inputs: []
+        }
       ]
     )
     |> child(:opus_output_parser, Membrane.Opus.Parser)
@@ -190,7 +181,7 @@ defmodule RecordingConverter.Pipeline do
     |> via_in(Pad.ref(:input, :audio),
       options: [
         encoding: :AAC,
-        segment_duration: Time.seconds(@segment_duration)
+        segment_duration: Membrane.Time.seconds(@segment_duration)
       ]
     )
     |> get_child(:hls_sink_bin)
