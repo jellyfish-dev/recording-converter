@@ -90,8 +90,8 @@ defmodule RecordingConverter.Pipeline do
 
   @impl true
   def handle_child_notification(
-        {:request_result, _req, {:error, error}, _lc_ctx},
-        _child,
+        {:request_result, _req, {:error, error}},
+        :video_compositor,
         _membrane_ctx,
         _state
       ) do
