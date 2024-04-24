@@ -1,0 +1,54 @@
+version: "3"
+
+services:
+  test:
+    build: .
+    environment:
+      - BUCKET_NAME=bucket
+      - REPORT_PATH=${TEST_NAME}/report.json
+      - OUTPUT_DIRECTORY_PATH=./output
+      - AWS_S3_REGION=us-east-1
+      - AWS_S3_ACCESS_KEY_ID=dummy
+      - AWS_S3_SECRET_ACCESS_KEY=dummy
+      - LOCAL_STACK=true
+    depends_on:
+      s3mock:
+        condition: service_healthy
+
+  s3mock:
+    container_name: s3mock
+    image: localstack/localstack
+    environment:
+      - SERVICES=s3
+      - debug=true
+      - retainFilesOnExit=true
+      - root=containers3root
+      - BUCKET_NAME=bucket
+      - DIRECTORY_PATH=/containers3root/files
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+      - TEST_NAME=$TEST_NAME
+    ports:
+      - 4566:4566
+    healthcheck:
+      test: [ "CMD", "bash", "/check_health.sh" ]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+    volumes:
+      - "./e2e/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh" # ready hook
+      - "./e2e/check_health.sh:/check_health.sh"
+      - ./test/fixtures/${TEST_NAME}:/containers3root/files
+
+  output_verify:
+    image: membraneframeworklabs/docker_membrane:latest
+    command:
+      - sh
+      - -c
+      - |
+        cd app/
+        elixir compare_script.exs
+    environment:
+      - TEST_NAME=$TEST_NAME
+    volumes:
+      - "./e2e/:/app"
