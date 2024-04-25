@@ -103,8 +103,17 @@ defmodule RecordingConverter.ReportParser do
   defp calculate_track_duration(track) do
     clock_rate_ms = div(track["clock_rate"], 1_000)
 
-    difference_in_milliseconds =
-      div(track["end_timestamp"] - track["start_timestamp"], clock_rate_ms)
+    end_timestamp = track["end_timestamp"]
+    start_timestamp = track["start_timestamp"]
+
+    timestamp_difference =
+      if end_timestamp < start_timestamp do
+        end_timestamp + 2 ** 32 - 1 - start_timestamp
+      else
+        end_timestamp - start_timestamp
+      end
+
+    difference_in_milliseconds = div(timestamp_difference, clock_rate_ms)
 
     (difference_in_milliseconds - @delta_timestamp_milliseconds)
     |> Membrane.Time.milliseconds()
