@@ -66,16 +66,25 @@ defmodule RecordingConverter.ReportParser do
 
     case {audio_end_timestamp, video_end_timestamp} do
       {nil, nil} ->
-        []
+        raise "Don't have any timestamp fatal error"
 
       {nil, timestamp} ->
-        [Compositor.schedule_unregister_audio_output(timestamp)]
+        [
+          Compositor.schedule_unregister_audio_output(timestamp),
+          Compositor.schedule_unregister_video_output(timestamp)
+        ]
 
       {timestamp, nil} ->
-        [Compositor.schedule_unregister_video_output(timestamp)]
+        [
+          Compositor.schedule_unregister_audio_output(timestamp),
+          Compositor.schedule_unregister_video_output(timestamp)
+        ]
 
-      _other ->
-        []
+      {audio_ts, video_ts} ->
+        [
+          Compositor.schedule_unregister_audio_output(audio_ts),
+          Compositor.schedule_unregister_video_output(video_ts)
+        ]
     end
   end
 

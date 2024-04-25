@@ -17,7 +17,12 @@ defmodule RecordingConverter.Pipeline do
 
   @impl true
   def handle_init(_ctx, opts) do
-    output_directory = opts.output_directory
+    {[], opts}
+  end
+
+  @impl true
+  def handle_setup(_ctx, state) do
+    output_directory = state.output_directory
 
     with {:ok, files} when files != [] <- File.ls(output_directory) do
       Logger.warning(
@@ -29,19 +34,6 @@ defmodule RecordingConverter.Pipeline do
 
     File.mkdir_p!(output_directory)
 
-    main_spec =
-      [
-        generate_sink_bin(output_directory),
-        generate_output_audio_branch(opts),
-        generate_output_video_branch(opts)
-      ]
-      |> Enum.reject(&is_nil(&1))
-
-    {[spec: main_spec], opts}
-  end
-
-  @impl true
-  def handle_setup(_ctx, state) do
     report_path = s3_file_path(@report_file, state)
 
     tracks = ReportParser.get_tracks(state.bucket_name, report_path)
@@ -52,15 +44,21 @@ defmodule RecordingConverter.Pipeline do
 
     tracks_spec = Enum.map(tracks, &create_branch(&1, state))
 
-    track_actions =
-      tracks
-      |> ReportParser.get_all_track_actions()
-      |> Enum.map(&notify_compositor/1)
+    track_actions = ReportParser.get_all_track_actions(tracks)
 
-    register_image_action =
-      state.image_url |> Compositor.register_image_action() |> notify_compositor()
+    register_image_action = Compositor.register_image_action(state.image_url)
 
-    actions = [{:spec, tracks_spec}, register_image_action | track_actions]
+    all_compositor_actions = [register_image_action | track_actions]
+
+    main_spec =
+      [
+        generate_sink_bin(output_directory),
+        generate_output_audio_branch(state, all_compositor_actions),
+        generate_output_video_branch(state)
+      ]
+      |> Enum.reject(&is_nil(&1))
+
+    actions = [{:spec, main_spec ++ tracks_spec}]
 
     {actions,
      %{
@@ -103,6 +101,27 @@ defmodule RecordingConverter.Pipeline do
   end
 
   @impl true
+  def handle_child_notification(
+        {atom, _pad, _lc_ctx},
+        :video_compositor,
+        _membrane_ctx,
+        state
+      )
+      when atom in [:input_delivered, :input_playing, :input_eos] do
+    {[], state}
+  end
+
+  @impl true
+  def handle_child_notification(:start_of_stream, :hls_sink_bin, _ctx, state) do
+    {[], state}
+  end
+
+  @impl true
+  def handle_child_notification({:track_playable, _track}, :hls_sink_bin, _ctx, state) do
+    {[], state}
+  end
+
+  @impl true
   def handle_child_notification(:end_of_stream, :hls_sink_bin, _ctx, state) do
     {[terminate: :normal], state}
   end
@@ -137,14 +156,12 @@ defmodule RecordingConverter.Pipeline do
     get_child(:video_compositor)
     |> via_out(Pad.ref(:video_output, Compositor.video_output_id()),
       options: [
-        encoder_preset: :slow,
         width: @output_width,
         height: @output_height,
         encoder: %LiveCompositor.Encoder.FFmpegH264{preset: :slow},
         initial: %{
           root: Compositor.scene([])
-        },
-        send_eos_when: :all_inputs
+        }
       ]
     )
     |> child(:output_video_parser, %Membrane.H264.Parser{
@@ -160,11 +177,12 @@ defmodule RecordingConverter.Pipeline do
     |> get_child(:hls_sink_bin)
   end
 
-  defp generate_output_audio_branch(state) do
+  defp generate_output_audio_branch(state, compositor_actions) do
     child(:video_compositor, %Membrane.LiveCompositor{
       framerate: {30, 1},
       composing_strategy: :offline_processing,
-      server_setup: Compositor.server_setup(state.compositor_path)
+      server_setup: Compositor.server_setup(state.compositor_path),
+      init_requests: compositor_actions
     })
     |> via_out(Pad.ref(:audio_output, Compositor.audio_output_id()),
       options: [
@@ -173,8 +191,7 @@ defmodule RecordingConverter.Pipeline do
         },
         initial: %{
           inputs: []
-        },
-        send_eos_when: :all_inputs
+        }
       ]
     )
     |> child(:opus_output_parser, Membrane.Opus.Parser)
