@@ -7,6 +7,7 @@ Mix.install([
 
 defmodule CompareScript do
   @bucket "bucket"
+  @index_name "index.m3u8"
   @aws_config [
                 access_key_id: System.get_env("AWS_S3_ACCESS_KEY_ID", "dummy"),
                 secret_access_key: System.get_env("AWS_S3_SECRET_ACCESS_KEY", "dummy"),
@@ -50,6 +51,57 @@ defmodule CompareScript do
     |> Base.encode16()
     |> String.downcase()
   end
+
+  @spec assert_pipeline_output(String.t()) :: no_return()
+  def assert_pipeline_output(output_dir_path) do
+    index_file = assert_file_exist!(@index_name, output_dir_path)
+
+    playlist_name =
+      index_file
+      |> String.split("\n")
+      |> Enum.at(-1)
+
+    playlist_file = assert_file_exist!(playlist_name, output_dir_path)
+
+    playlist_lines = String.split(playlist_file, "\n")
+
+    playlist_lines
+    |> Stream.filter(&String.contains?(&1, "muxed_header"))
+    |> Stream.map(&String.replace(&1, "#EXT-X-MAP:URI=", ""))
+    |> Enum.map(&String.replace(&1, "\"", ""))
+    |> assert_files_exist!(output_dir_path)
+
+    playlist_lines
+    |> Enum.filter(&String.starts_with?(&1, "muxed_segment"))
+    |> assert_files_exist!(output_dir_path)
+  end
+
+  defp assert_files_exist!(files, dir_path) when is_list(files) do
+    Enum.each(files, &assert_file_exist!(&1, dir_path))
+  end
+
+  defp assert_file_exist!(file, dir_path) when is_binary(file) do
+    file_path = Path.join([".", dir_path, file])
+    {result, file} = File.read(file_path)
+
+    dir_files = File.ls!(dir_path) |> Enum.join(" ")
+    local_files = File.ls!("./") |> Enum.join(" ")
+
+    assert(
+      result == :ok,
+      "File that doesn't exists: #{file_path},\n dir/files (#{dir_path}): #{dir_files},\n ./files: #{local_files}"
+    )
+
+    assert(byte_size(file) > 0, "File #{file_path} has size not bigger than 0")
+    file
+  end
+
+  defp assert(condition, text) do
+    unless condition do
+      IO.inspect(text)
+      System.stop(1)
+    end
+  end
 end
 
 output_dir = "./example-output/"
@@ -59,28 +111,4 @@ test_name = System.fetch_env!("TEST_NAME")
 
 output_dir = Path.join([output_dir, test_name, "output"])
 
-output_hashes =
-  output_dir
-  |> File.ls!()
-  |> Enum.map(&Path.join(output_dir, &1))
-  |> Map.new(&{&1, CompareScript.hash_file(&1)})
-  |> IO.inspect(label: :WTF)
-
-reference_hashes = %{
-  "./example-output/one-video/output/g3cFdmlkZW8.m3u8" =>
-    "a03b3caab7e92232dced4baa8f659808f520f37768084070505ed1090536d914",
-  "./example-output/one-video/output/index.m3u8" =>
-    "e43fef97f7cc8755273b413a70dce4554d1827afe7df072f12b3524860c26e16",
-  "./example-output/one-video/output/muxed_header_g3cFdmlkZW8_part_0.mp4" =>
-    "03754c5fa6ec8c364e7b76ec4fb531c9098fff055fa59622b2561ffade9c1c8d",
-  "./example-output/one-video/output/muxed_segment_0_g3cFdmlkZW8.m4s" =>
-    "40c1f6e975e51374cc102551aa8c4467d4761e9d20ca95fc690487291c925a39",
-  "./example-output/one-video/output/muxed_segment_1_g3cFdmlkZW8.m4s" =>
-    "dd35d7b6d03b73ed65aafaf3b47549de20f4a0685be001e294293a33ffbbfc26"
-}
-
-Enum.each(output_hashes, fn {file_path, file_hash} ->
-  if Map.fetch!(reference_hashes, file_path) != file_hash do
-    System.stop(1)
-  end
-end)
+CompareScript.assert_pipeline_output(output_dir)
