@@ -4,6 +4,7 @@ defmodule RecordingConverter.ReportParser do
   alias RecordingConverter.Compositor
 
   @delta_timestamp_milliseconds 100
+  @max_timestamp_value 2 ** 32 - 1
 
   @type track_action :: {{:start | :end}, map(), non_neg_integer()}
 
@@ -108,7 +109,7 @@ defmodule RecordingConverter.ReportParser do
 
     timestamp_difference =
       if end_timestamp < start_timestamp do
-        end_timestamp + 2 ** 32 - 1 - start_timestamp
+        end_timestamp + @max_timestamp_value - start_timestamp
       else
         end_timestamp - start_timestamp
       end
