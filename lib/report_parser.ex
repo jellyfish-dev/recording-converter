@@ -4,6 +4,7 @@ defmodule RecordingConverter.ReportParser do
   alias RecordingConverter.Compositor
 
   @delta_timestamp_milliseconds 100
+  @max_timestamp_value 2 ** 32 - 1
 
   @type track_action :: {{:start | :end}, map(), non_neg_integer()}
 
@@ -66,16 +67,25 @@ defmodule RecordingConverter.ReportParser do
 
     case {audio_end_timestamp, video_end_timestamp} do
       {nil, nil} ->
-        []
+        raise "Don't have any timestamp fatal error"
 
       {nil, timestamp} ->
-        [Compositor.schedule_unregister_audio_output(timestamp)]
+        [
+          Compositor.schedule_unregister_audio_output(timestamp),
+          Compositor.schedule_unregister_video_output(timestamp)
+        ]
 
       {timestamp, nil} ->
-        [Compositor.schedule_unregister_video_output(timestamp)]
+        [
+          Compositor.schedule_unregister_audio_output(timestamp),
+          Compositor.schedule_unregister_video_output(timestamp)
+        ]
 
-      _other ->
-        []
+      {audio_ts, video_ts} ->
+        [
+          Compositor.schedule_unregister_audio_output(audio_ts),
+          Compositor.schedule_unregister_video_output(video_ts)
+        ]
     end
   end
 
@@ -94,8 +104,17 @@ defmodule RecordingConverter.ReportParser do
   defp calculate_track_duration(track) do
     clock_rate_ms = div(track["clock_rate"], 1_000)
 
-    difference_in_milliseconds =
-      div(track["end_timestamp"] - track["start_timestamp"], clock_rate_ms)
+    end_timestamp = track["end_timestamp"]
+    start_timestamp = track["start_timestamp"]
+
+    timestamp_difference =
+      if end_timestamp < start_timestamp do
+        end_timestamp + @max_timestamp_value - start_timestamp
+      else
+        end_timestamp - start_timestamp
+      end
+
+    difference_in_milliseconds = div(timestamp_difference, clock_rate_ms)
 
     (difference_in_milliseconds - @delta_timestamp_milliseconds)
     |> Membrane.Time.milliseconds()

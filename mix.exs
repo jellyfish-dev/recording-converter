@@ -63,7 +63,8 @@ defmodule RecordingConverter.Mixfile do
       {:membrane_http_adaptive_stream_plugin, "~> 0.18.3"},
       {:jason, "~> 1.0"},
       {:membrane_video_compositor_plugin,
-       github: "membraneframework/membrane_video_compositor_plugin"},
+       github: "membraneframework/membrane_video_compositor_plugin",
+       ref: "52326eaa0920bef84e0672e19ab0b0a58266dca8"},
 
       # aws deps
       {:ex_aws, "~> 2.1"},
