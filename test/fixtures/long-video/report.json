@@ -7,7 +7,8 @@
       "encoding": "H264",
       "clock_rate": 90000,
       "start_timestamp": 1252237519,
-      "end_timestamp": 1255786759
+      "end_timestamp": 1255786759,
+      "origin": "origin"
     },
     "4a0bbdc0-c610-46a7-a574-1d0858aa65ca.msr": {
       "offset": 0,
@@ -16,7 +17,8 @@
       "encoding": "H264",
       "clock_rate": 90000,
       "start_timestamp": 4135275928,
-      "end_timestamp": 4143092158
+      "end_timestamp": 4143092158,
+      "origin": "origin"
     }
   },
   "recording_id": "64"

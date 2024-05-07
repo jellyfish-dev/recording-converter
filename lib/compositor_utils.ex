@@ -2,6 +2,7 @@ defmodule RecordingConverter.Compositor do
   @moduledoc false
 
   alias Membrane.LiveCompositor.Request
+  alias RecordingConverter.ReportParser
 
   @text_margin 10
   @letter_width 12
@@ -9,6 +10,8 @@ defmodule RecordingConverter.Compositor do
   @output_height 720
   @video_output_id "video_output_1"
   @audio_output_id "audio_output_1"
+
+  @avatar_threshold_ns 1_000_000_000
 
   @spec server_setup(binary) :: :start_locally | {:start_locally, String.t()}
   def server_setup(compositor_path) do
@@ -39,10 +42,10 @@ defmodule RecordingConverter.Compositor do
   @spec video_output_id() :: String.t()
   def video_output_id(), do: @video_output_id
 
-  @spec generate_output_update(map(), number()) :: [struct()]
-  def generate_output_update(tracks, timestamp),
+  @spec generate_output_update(map(), number(), map()) :: [struct()]
+  def generate_output_update(tracks, timestamp, video_tracks_offset),
     do: [
-      generate_video_output_update(tracks, timestamp),
+      generate_video_output_update(tracks, timestamp, video_tracks_offset),
       generate_audio_output_update(tracks, timestamp)
     ]
 
@@ -78,11 +81,17 @@ defmodule RecordingConverter.Compositor do
 
   defp generate_video_output_update(
          %{"video" => video_tracks, "audio" => audio_tracks},
-         timestamp
+         timestamp,
+         video_tracks_offset
        )
        when is_list(video_tracks) do
-    video_tracks_id = Enum.map(video_tracks, fn track -> track["origin"] end)
-    avatar_tracks = Enum.reject(audio_tracks, fn track -> track["origin"] in video_tracks_id end)
+    video_tracks_origin = Enum.map(video_tracks, fn track -> track["origin"] end)
+
+    avatar_tracks =
+      Enum.filter(
+        audio_tracks,
+        &should_have_avatar?(&1, timestamp, video_tracks_origin, video_tracks_offset)
+      )
 
     avatars_config = Enum.map(avatar_tracks, &avatar_view/1)
     video_tracks_config = Enum.map(video_tracks, &video_input_source_view/1)
@@ -101,6 +110,32 @@ defmodule RecordingConverter.Compositor do
       inputs: Enum.map(audio_tracks, &%{input_id: &1.id}),
       schedule_time: Membrane.Time.nanoseconds(timestamp)
     }
+  end
+
+  defp should_have_avatar?(
+         %{"origin" => origin} = track,
+         timestamp,
+         video_tracks_origin,
+         video_tracks_offset
+       ) do
+    origin not in video_tracks_origin and
+      longer_than_treshold?(track, timestamp) and
+      not has_video_in_threshold?(origin, video_tracks_offset, timestamp)
+  end
+
+  defp longer_than_treshold?(%{"offset" => offset} = track, timestamp) do
+    ReportParser.calculate_track_end(track, offset) - timestamp > @avatar_threshold_ns
+  end
+
+  defp has_video_in_threshold?(origin, video_tracks_offset, timestamp) do
+    threshold = timestamp + @avatar_threshold_ns
+
+    next_video_offset =
+      video_tracks_offset
+      |> Map.get(origin, [])
+      |> Enum.find(threshold, &(&1 > timestamp))
+
+    next_video_offset < threshold
   end
 
   defp video_input_source_view(track) do

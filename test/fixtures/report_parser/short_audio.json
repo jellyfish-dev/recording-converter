@@ -1,0 +1,16 @@
+{
+    "tracks": {
+      "audio.msr": {
+        "offset": 0,
+        "type": "audio",
+        "encoding": "OPUS",
+        "metadata": null,
+        "clock_rate": 48000,
+        "start_timestamp": 0,
+        "end_timestamp": 40000,
+        "origin": "origin"
+      }
+    },
+    "recording_id": "recording_id"
+  }
+  

@@ -10,7 +10,8 @@
       },
       "clock_rate": 90000,
       "start_timestamp": 714157743,
-      "end_timestamp": 715056243
+      "end_timestamp": 715056243,
+      "origin": 1
     },
     "a89421bc-8466-485d-ad52-7f574acc4084.msr": {
       "offset": 18052166,
@@ -19,7 +20,8 @@
       "metadata": null,
       "clock_rate": 48000,
       "start_timestamp": 775938176,
-      "end_timestamp": 776421056
+      "end_timestamp": 776421056,
+      "origin": 1
     },
     "b96043e6-abaa-40bd-9267-12794f6e5529.msr": {
       "offset": 0,
@@ -31,7 +33,8 @@
       },
       "clock_rate": 90000,
       "start_timestamp": 3637718073,
-      "end_timestamp": 3638616573
+      "end_timestamp": 3638616573,
+      "origin": 2
     },
     "dd78e5bd-aa5a-4e01-abbc-354227ab7529.msr": {
       "offset": 12473666,
@@ -40,7 +43,8 @@
       "metadata": null,
       "clock_rate": 48000,
       "start_timestamp": 2095834478,
-      "end_timestamp": 2096317358
+      "end_timestamp": 2096317358,
+      "origin": 2
     }
   },
   "recording_id": "recording_id"

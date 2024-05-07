@@ -19,11 +19,38 @@ defmodule RecordingConverter.ReportParser do
   @spec get_all_track_actions(tracks :: list()) :: list()
   def get_all_track_actions(tracks) do
     tracks_actions = get_track_actions(tracks)
+    video_tracks_offset = get_video_tracks_offset(tracks)
 
-    update_scene_notifications = create_update_scene_notifications(tracks_actions)
+    update_scene_notifications =
+      create_update_scene_notifications(tracks_actions, video_tracks_offset)
+
     unregister_output_actions = generate_unregister_output_actions(tracks_actions)
 
     update_scene_notifications ++ unregister_output_actions
+  end
+
+  @spec calculate_track_end(map(), non_neg_integer()) :: non_neg_integer()
+  def calculate_track_end(track, offset) do
+    clock_rate_ms = div(track["clock_rate"], 1_000)
+
+    end_timestamp = track["end_timestamp"]
+    start_timestamp = track["start_timestamp"]
+
+    timestamp_difference =
+      if end_timestamp < start_timestamp do
+        end_timestamp + @max_timestamp_value - start_timestamp
+      else
+        end_timestamp - start_timestamp
+      end
+
+    difference_in_milliseconds = div(timestamp_difference, clock_rate_ms)
+
+    duration =
+      (difference_in_milliseconds - @delta_timestamp_milliseconds)
+      |> Membrane.Time.milliseconds()
+      |> Membrane.Time.as_nanoseconds(:round)
+
+    offset + duration
   end
 
   defp get_report(bucket_name, report_path) do
@@ -34,6 +61,15 @@ defmodule RecordingConverter.ReportParser do
     |> Jason.decode!()
   end
 
+  defp get_video_tracks_offset(tracks) do
+    tracks
+    |> Enum.filter(&(&1["type"] == "video"))
+    |> Enum.reduce(%{}, fn %{"origin" => origin, "offset" => offset}, acc ->
+      Map.update(acc, origin, [offset], &[offset | &1])
+    end)
+    |> Map.new(fn {origin, offset} -> {origin, Enum.sort(offset)} end)
+  end
+
   defp get_track_actions(tracks) do
     tracks
     |> Enum.flat_map(fn track ->
@@ -41,22 +77,22 @@ defmodule RecordingConverter.ReportParser do
 
       [
         {:start, track, offset},
-        {:end, track, offset + calculate_track_duration(track)}
+        {:end, track, calculate_track_end(track, offset)}
       ]
     end)
     |> Enum.sort_by(fn {_atom, _track, timestamp} -> timestamp end)
   end
 
-  defp create_update_scene_notifications(track_actions) do
+  defp create_update_scene_notifications(track_actions, video_tracks_offset) do
     track_actions
     |> Enum.map_reduce(%{"audio" => [], "video" => []}, fn
       {:start, %{"type" => type} = track, timestamp}, acc ->
         acc = Map.update!(acc, type, &[track | &1])
-        {Compositor.generate_output_update(acc, timestamp), acc}
+        {Compositor.generate_output_update(acc, timestamp, video_tracks_offset), acc}
 
       {:end, %{"type" => type} = track, timestamp}, acc ->
         acc = Map.update!(acc, type, fn tracks -> Enum.reject(tracks, &(&1 == track)) end)
-        {Compositor.generate_output_update(acc, timestamp), acc}
+        {Compositor.generate_output_update(acc, timestamp, video_tracks_offset), acc}
     end)
     |> then(fn {actions, _acc} -> actions end)
     |> List.flatten()
@@ -99,26 +135,6 @@ defmodule RecordingConverter.ReportParser do
     video_end_timestamp = calculate_end_timestamp(video_tracks)
 
     {audio_end_timestamp, video_end_timestamp}
-  end
-
-  defp calculate_track_duration(track) do
-    clock_rate_ms = div(track["clock_rate"], 1_000)
-
-    end_timestamp = track["end_timestamp"]
-    start_timestamp = track["start_timestamp"]
-
-    timestamp_difference =
-      if end_timestamp < start_timestamp do
-        end_timestamp + @max_timestamp_value - start_timestamp
-      else
-        end_timestamp - start_timestamp
-      end
-
-    difference_in_milliseconds = div(timestamp_difference, clock_rate_ms)
-
-    (difference_in_milliseconds - @delta_timestamp_milliseconds)
-    |> Membrane.Time.milliseconds()
-    |> Membrane.Time.as_nanoseconds(:round)
   end
 
   defp calculate_end_timestamp(tracks) do
