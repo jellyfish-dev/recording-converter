@@ -3,9 +3,11 @@ name: Build and publish Docker image
 on:
   push:
     branches:
-      - master
-    tags:
-      - "v*.*.*"
+      - fix_e2e_tests
+    # branches:
+    #   - master
+    # tags:
+    #   - "v*.*.*"
 
 env:
   REGISTRY: ghcr.io
@@ -21,6 +23,12 @@ jobs:
       - name: Run e2e tests
         run: |
           set -e
+          pwd
+          echo "After pwd"
+          ls
+          echo "After ls"
+          ls ./test/fixtures
+          echo "After ls test"
           for test in $(ls ./test/fixtures)
           do
             echo "Running test $test"
@@ -28,38 +36,38 @@ jobs:
             TEST_NAME=$test docker compose up output_verify --exit-code-from output_verify
           done
 
-      - uses: actions/checkout@v3
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=edge,branch=master
-      - name: Set short sha
-        shell: bash
-        run: |
-          echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          platforms: linux/amd64
-          push: true
-          tags: ${{  steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      # - uses: actions/checkout@v3
+      # - name: Setup QEMU
+      #   uses: docker/setup-qemu-action@v2
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v2
+      # - name: Login to Container Registry
+      #   uses: docker/login-action@v2
+      #   with:
+      #     registry: ${{ env.REGISTRY }}
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Extract metadata (tags, labels) for Docker
+      #   id: meta
+      #   uses: docker/metadata-action@v4
+      #   with:
+      #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      #     tags: |
+      #       type=semver,pattern={{version}}
+      #       type=edge,branch=master
+      # - name: Set short sha
+      #   shell: bash
+      #   run: |
+      #     echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
+      # - name: Build and push Docker image
+      #   uses: docker/build-push-action@v4
+      #   with:
+      #     context: .
+      #     platforms: linux/amd64
+      #     push: true
+      #     tags: ${{  steps.meta.outputs.tags }}
+      #     cache-from: type=gha
+      #     cache-to: type=gha,mode=max
 
   # At the moment it is impossible to build linux/arm image
   # build-and-push-image-arm:
