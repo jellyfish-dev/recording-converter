@@ -20,14 +20,17 @@ jobs:
       contents: read
       packages: write
     steps:
+      - uses: actions/checkout@v3
       - name: Run e2e tests
         run: |
           set -e
-          pwd
+          echo $(pwd)
           echo "After pwd"
-          ls
+          echo $(ls)
           echo "After ls"
-          ls ./test/fixtures
+          echo $(ls ..)
+          echo "After ls .."
+          echo $(ls ./test/fixtures)
           echo "After ls test"
           for test in $(ls ./test/fixtures)
           do
@@ -36,7 +39,6 @@ jobs:
             TEST_NAME=$test docker compose up output_verify --exit-code-from output_verify
           done
 
-      # - uses: actions/checkout@v3
       # - name: Setup QEMU
       #   uses: docker/setup-qemu-action@v2
       # - name: Set up Docker Buildx
