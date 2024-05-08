@@ -38,3 +38,10 @@ if config_env() != :test do
       """)
   end
 end
+
+if System.fetch_env("LOCAL_STACK") != :error do
+  config :ex_aws, :s3,
+    scheme: "http://",
+    host: "s3mock",
+    port: 4566
+end
