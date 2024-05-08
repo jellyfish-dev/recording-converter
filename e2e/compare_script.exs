@@ -24,7 +24,6 @@ defmodule CompareScript do
     |> ExAws.request!(@aws_config)
     |> then(& &1.body.contents)
     |> Enum.map(& &1.key)
-    |> IO.inspect(label: :HLS_UPLOADED_FILES)
   end
 
   def download_output_files(output_dir) do
