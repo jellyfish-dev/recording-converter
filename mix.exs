@@ -64,7 +64,7 @@ defmodule RecordingConverter.Mixfile do
       {:jason, "~> 1.0"},
       {:membrane_video_compositor_plugin,
        github: "membraneframework/membrane_video_compositor_plugin",
-       ref: "52326eaa0920bef84e0672e19ab0b0a58266dca8"},
+       ref: "c8a5d0172f6944eaa618003ddbf365fd557dfe16"},
 
       # aws deps
       {:ex_aws, "~> 2.1"},
