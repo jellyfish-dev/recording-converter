@@ -62,6 +62,7 @@ defmodule RecordingConverter.ReportParser do
   end
 
   defp get_video_tracks_offset(tracks) do
+    # TODO: remove screenshare tracks, after adding necessary info to reports
     tracks
     |> Enum.filter(&(&1["type"] == "video"))
     |> Enum.reduce(%{}, fn %{"origin" => origin, "offset" => offset}, acc ->
