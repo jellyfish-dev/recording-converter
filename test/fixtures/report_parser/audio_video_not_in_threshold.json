@@ -1,0 +1,26 @@
+{
+    "tracks": {
+      "audio.msr": {
+        "offset": 0,
+        "type": "audio",
+        "encoding": "OPUS",
+        "metadata": null,
+        "clock_rate": 48000,
+        "start_timestamp": 0,
+        "end_timestamp": 400000,
+        "origin": "origin"
+      },
+      "video.msr": {
+        "offset": 5000000000,
+        "type": "video",
+        "metadata": null,
+        "encoding": "H264",
+        "clock_rate": 90000,
+        "start_timestamp": 4135275928,
+        "end_timestamp": 4143092158,
+        "origin": "origin"
+      }
+    },
+    "recording_id": "recording_id"
+  }
+  

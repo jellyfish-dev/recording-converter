@@ -8,7 +8,8 @@
       "metadata": null,
       "start_timestamp": 3620631514,
       "clock_rate": 48000,
-      "end_timestamp": 3621114394
+      "end_timestamp": 3621114394,
+      "origin": 1
     },
     "video_15D5A19A045095D9.msr": {
       "offset": 0,
@@ -20,7 +21,8 @@
       },
       "start_timestamp": 3257040625,
       "clock_rate": 90000,
-      "end_timestamp": 3257939125
+      "end_timestamp": 3257939125,
+      "origin": 1
     }
   }
 }
