@@ -18,6 +18,7 @@ jobs:
       contents: read
       packages: write
     steps:
+      - uses: actions/checkout@v3
       - name: Run e2e tests
         run: |
           set -e
@@ -27,8 +28,6 @@ jobs:
             TEST_NAME=$test docker compose up --remove-orphans test --exit-code-from test
             TEST_NAME=$test docker compose up output_verify --exit-code-from output_verify
           done
-
-      - uses: actions/checkout@v3
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
