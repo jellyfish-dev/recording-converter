@@ -144,10 +144,10 @@ defmodule RecordingConverter.Compositor do
   defp should_have_avatar?(
          %{"origin" => origin} = track,
          timestamp,
-         video_tracks_origin,
+         camera_tracks_origin,
          camera_tracks_offset
        ) do
-    origin not in video_tracks_origin and
+    origin not in camera_tracks_origin and
       longer_than_treshold?(track, timestamp) and
       not has_video_in_threshold?(origin, camera_tracks_offset, timestamp)
   end
