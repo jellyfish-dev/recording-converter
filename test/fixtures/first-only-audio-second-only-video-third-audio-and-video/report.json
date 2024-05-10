@@ -1,1 +1,45 @@
-{"tracks":{"5ca9f26d-d406-4e49-b7ac-4b3f52cdd01b.msr":{"offset":7517957972,"type":"video","encoding":"H264","metadata":null,"clock_rate":90000,"start_timestamp":1143158520,"end_timestamp":1145930161},"5cd47ba0-6e90-4e44-951c-985ba0e6c1fa.msr":{"offset":14892117290,"type":"audio","encoding":"OPUS","metadata":null,"clock_rate":48000,"start_timestamp":2076158981,"end_timestamp":2077389701},"a51b6bc5-91ed-4297-a2bd-4301b970ab1c.msr":{"offset":18001217644,"type":"video","encoding":"H264","metadata":null,"clock_rate":90000,"start_timestamp":3275541744,"end_timestamp":3277929624},"f82ee72b-eb7d-4558-a25b-7fbb098cd323.msr":{"offset":0,"type":"audio","encoding":"OPUS","metadata":null,"clock_rate":48000,"start_timestamp":1583759977,"end_timestamp":1585491817}},"recording_id":"76"}
+{
+    "tracks": {
+        "5ca9f26d-d406-4e49-b7ac-4b3f52cdd01b.msr": {
+            "offset": 7517957972,
+            "type": "video",
+            "encoding": "H264",
+            "metadata": null,
+            "clock_rate": 90000,
+            "start_timestamp": 1143158520,
+            "end_timestamp": 1145930161,
+            "origin": 1
+        },
+        "5cd47ba0-6e90-4e44-951c-985ba0e6c1fa.msr": {
+            "offset": 14892117290,
+            "type": "audio",
+            "encoding": "OPUS",
+            "metadata": null,
+            "clock_rate": 48000,
+            "start_timestamp": 2076158981,
+            "end_timestamp": 2077389701,
+            "origin": 2
+        },
+        "a51b6bc5-91ed-4297-a2bd-4301b970ab1c.msr": {
+            "offset": 18001217644,
+            "type": "video",
+            "encoding": "H264",
+            "metadata": null,
+            "clock_rate": 90000,
+            "start_timestamp": 3275541744,
+            "end_timestamp": 3277929624,
+            "origin": 2
+        },
+        "f82ee72b-eb7d-4558-a25b-7fbb098cd323.msr": {
+            "offset": 0,
+            "type": "audio",
+            "encoding": "OPUS",
+            "metadata": null,
+            "clock_rate": 48000,
+            "start_timestamp": 1583759977,
+            "end_timestamp": 1585491817,
+            "origin": 1
+        }
+    },
+    "recording_id": "76"
+}
