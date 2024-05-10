@@ -44,9 +44,9 @@ defmodule RecordingConverter.Compositor do
   def video_output_id(), do: @video_output_id
 
   @spec generate_output_update(map(), number(), map()) :: [struct()]
-  def generate_output_update(tracks, timestamp, video_tracks_offset),
+  def generate_output_update(tracks, timestamp, camera_tracks_offset),
     do: [
-      generate_video_output_update(tracks, timestamp, video_tracks_offset),
+      generate_video_output_update(tracks, timestamp, camera_tracks_offset),
       generate_audio_output_update(tracks, timestamp)
     ]
 
@@ -83,7 +83,7 @@ defmodule RecordingConverter.Compositor do
   defp generate_video_output_update(
          %{"video" => video_tracks, "audio" => audio_tracks},
          timestamp,
-         video_tracks_offset
+         camera_tracks_offset
        )
        when is_list(video_tracks) do
     {camera_tracks, screenshare_tracks} =
@@ -94,7 +94,7 @@ defmodule RecordingConverter.Compositor do
     avatar_tracks =
       Enum.filter(
         audio_tracks,
-        &should_have_avatar?(&1, timestamp, camera_tracks_origin, video_tracks_offset)
+        &should_have_avatar?(&1, timestamp, camera_tracks_origin, camera_tracks_offset)
       )
 
     camera_tracks_config =
@@ -145,22 +145,22 @@ defmodule RecordingConverter.Compositor do
          %{"origin" => origin} = track,
          timestamp,
          video_tracks_origin,
-         video_tracks_offset
+         camera_tracks_offset
        ) do
     origin not in video_tracks_origin and
       longer_than_treshold?(track, timestamp) and
-      not has_video_in_threshold?(origin, video_tracks_offset, timestamp)
+      not has_video_in_threshold?(origin, camera_tracks_offset, timestamp)
   end
 
   defp longer_than_treshold?(%{"offset" => offset} = track, timestamp) do
     ReportParser.calculate_track_end(track, offset) - timestamp > @avatar_threshold_ns
   end
 
-  defp has_video_in_threshold?(origin, video_tracks_offset, timestamp) do
+  defp has_video_in_threshold?(origin, camera_tracks_offset, timestamp) do
     threshold = timestamp + @avatar_threshold_ns
 
     next_video_offset =
-      video_tracks_offset
+      camera_tracks_offset
       |> Map.get(origin, [])
       |> Enum.find(threshold, &(&1 > timestamp))
 
