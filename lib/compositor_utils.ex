@@ -8,6 +8,7 @@ defmodule RecordingConverter.Compositor do
   @letter_width 12
   @output_width 1280
   @output_height 720
+  @screenshare_ratio 0.8
   @video_output_id "video_output_1"
   @audio_output_id "audio_output_1"
 
@@ -24,7 +25,7 @@ defmodule RecordingConverter.Compositor do
     end
   end
 
-  @spec scene(any()) :: map()
+  @spec scene(list()) :: map()
   def scene(children) do
     %{
       id: "tiles_0",
@@ -85,21 +86,32 @@ defmodule RecordingConverter.Compositor do
          video_tracks_offset
        )
        when is_list(video_tracks) do
-    video_tracks_origin = Enum.map(video_tracks, fn track -> track["origin"] end)
+    {camera_tracks, screenshare_tracks} =
+      Enum.split_with(video_tracks, &(get_in(&1, ["metadata", "type"]) != "screensharing"))
+
+    camera_tracks_origin = Enum.map(camera_tracks, fn track -> track["origin"] end)
 
     avatar_tracks =
       Enum.filter(
         audio_tracks,
-        &should_have_avatar?(&1, timestamp, video_tracks_origin, video_tracks_offset)
+        &should_have_avatar?(&1, timestamp, camera_tracks_origin, video_tracks_offset)
       )
 
-    avatars_config = Enum.map(avatar_tracks, &avatar_view/1)
-    video_tracks_config = Enum.map(video_tracks, &video_input_source_view/1)
+    camera_tracks_config =
+      Enum.map(camera_tracks, &video_input_source_view/1) ++
+        Enum.map(avatar_tracks, &avatar_view/1)
+
+    screenshare_tracks_config = Enum.map(screenshare_tracks, &video_input_source_view/1)
+
+    scene =
+      if screenshare_tracks_config != [],
+        do: scene_with_screenshare(camera_tracks_config, screenshare_tracks_config),
+        else: scene(camera_tracks_config)
 
     %Request.UpdateVideoOutput{
       output_id: @video_output_id,
       schedule_time: Membrane.Time.nanoseconds(timestamp),
-      root: scene(video_tracks_config ++ avatars_config)
+      root: scene
     }
   end
 
@@ -109,6 +121,23 @@ defmodule RecordingConverter.Compositor do
       output_id: @audio_output_id,
       inputs: Enum.map(audio_tracks, &%{input_id: &1.id}),
       schedule_time: Membrane.Time.nanoseconds(timestamp)
+    }
+  end
+
+  defp scene_with_screenshare(camera_children, screenshare_children) do
+    %{
+      type: :view,
+      width: @output_width,
+      height: @output_height,
+      direction: :row,
+      children: [
+        %{
+          type: :tiles,
+          width: @output_width * @screenshare_ratio,
+          children: screenshare_children
+        },
+        %{type: :tiles, children: camera_children}
+      ]
     }
   end
 
