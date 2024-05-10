@@ -7,7 +7,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 1752709056,
-      "end_timestamp": 1755167496
+      "end_timestamp": 1755167496,
+      "origin": 1
     },
     "398c4f96-ecc2-4ef0-abd9-eb9eaa940de7.msr": {
       "offset": 19105322,
@@ -16,7 +17,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 2946557976,
-      "end_timestamp": 2949175446
+      "end_timestamp": 2949175446,
+      "origin": 1
     },
     "61c1933a-51af-4c43-b2b1-4e7d799efec8.msr": {
       "offset": 3707214,
@@ -25,7 +27,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 3986416282,
-      "end_timestamp": 3988747462
+      "end_timestamp": 3988747462,
+      "origin": 1
     },
     "72464db5-a94d-491c-8f2a-5bbf7a384f88.msr": {
       "offset": 28975754,
@@ -34,7 +37,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 1923457777,
-      "end_timestamp": 1926560887
+      "end_timestamp": 1926560887,
+      "origin": 1
     },
     "7d6d5a44-a3b5-42f7-926a-8a5ead74125b.msr": {
       "offset": 27927295,
@@ -43,7 +47,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 1359773440,
-      "end_timestamp": 1360868650
+      "end_timestamp": 1360868650,
+      "origin": 1
     },
     "853ec649-88a9-4629-991d-f8e2b17f93f7.msr": {
       "offset": 0,
@@ -52,7 +57,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 2620484184,
-      "end_timestamp": 2623191744
+      "end_timestamp": 2623191744,
+      "origin": 1
     },
     "87b2a39e-b62a-48b4-bc37-135da9c4d0d1.msr": {
       "offset": 1399960,
@@ -61,7 +67,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 493739605,
-      "end_timestamp": 494951365
+      "end_timestamp": 494951365,
+      "origin": 1
     },
     "8d49170b-d6d3-497d-ba5c-ba2837247b3c.msr": {
       "offset": 26976460,
@@ -70,7 +77,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 2356366771,
-      "end_timestamp": 2358365401
+      "end_timestamp": 2358365401,
+      "origin": 1
     },
     "9cfd9266-2256-406b-b9a1-03383243d1d8.msr": {
       "offset": 2096920,
@@ -79,7 +87,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 3020099711,
-      "end_timestamp": 3023090681
+      "end_timestamp": 3023090681,
+      "origin": 1
     },
     "9f0f1fe4-1ca3-41b0-aad4-d85fbe2cb259.msr": {
       "offset": 21050992,
@@ -88,7 +97,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 517649089,
-      "end_timestamp": 518758879
+      "end_timestamp": 518758879,
+      "origin": 1
     },
     "a1352702-fc8e-4549-b9f0-24e0926aaa0a.msr": {
       "offset": 4526840,
@@ -97,7 +107,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 3869230073,
-      "end_timestamp": 3870742163
+      "end_timestamp": 3870742163,
+      "origin": 1
     },
     "ac758df3-b54c-4cef-98ad-02a7f75cc4de.msr": {
       "offset": 31321258,
@@ -106,7 +117,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 4121606273,
-      "end_timestamp": 4124478263
+      "end_timestamp": 4124478263,
+      "origin": 1
     },
     "b9b7f32b-58a3-4e2d-8c5e-1e81df53a384.msr": {
       "offset": 29785423,
@@ -115,7 +127,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 2140830592,
-      "end_timestamp": 2141925532
+      "end_timestamp": 2141925532,
+      "origin": 1
     },
     "d38250ed-cd0d-4803-b01d-797d91af2ac1.msr": {
       "offset": 32528010,
@@ -124,7 +137,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 3775621929,
-      "end_timestamp": 3777736479
+      "end_timestamp": 3777736479,
+      "origin": 1
     },
     "d4949784-de6a-446f-921c-ddd7ae3fbe52.msr": {
       "offset": 11951436,
@@ -133,7 +147,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 1626384687,
-      "end_timestamp": 1627403847
+      "end_timestamp": 1627403847,
+      "origin": 1
     },
     "da924bee-d064-4306-9f03-09e392a2e027.msr": {
       "offset": 25263748,
@@ -142,7 +157,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 817252872,
-      "end_timestamp": 819477402
+      "end_timestamp": 819477402,
+      "origin": 1
     },
     "dadf5a6c-909c-47ad-a9a3-aca98392f850.msr": {
       "offset": 22918412,
@@ -151,7 +167,8 @@
       "metadata": null,
       "clock_rate": 90000,
       "start_timestamp": 836591892,
-      "end_timestamp": 838356162
+      "end_timestamp": 838356162,
+      "origin": 1
     }
   },
   "recording_id": "74"

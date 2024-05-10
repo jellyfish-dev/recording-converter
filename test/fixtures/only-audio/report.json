@@ -7,7 +7,8 @@
       "metadata": null,
       "clock_rate": 48000,
       "start_timestamp": 3488728834,
-      "end_timestamp": 3489375874
+      "end_timestamp": 3489375874,
+      "origin": 1
     },
     "baf0a8f3-57ca-4258-bb72-cec0f812f7ce.msr": {
       "offset": 1997398,
@@ -16,7 +17,8 @@
       "metadata": null,
       "clock_rate": 48000,
       "start_timestamp": 2193996132,
-      "end_timestamp": 2194695012
+      "end_timestamp": 2194695012,
+      "origin": 1
     }
   },
   "recording_id": "75"
