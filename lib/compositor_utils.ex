@@ -8,6 +8,7 @@ defmodule RecordingConverter.Compositor do
   @letter_width 12
   @output_width 1280
   @output_height 720
+  @screenshare_ratio 0.8
   @video_output_id "video_output_1"
   @audio_output_id "audio_output_1"
 
@@ -24,7 +25,7 @@ defmodule RecordingConverter.Compositor do
     end
   end
 
-  @spec scene(any()) :: map()
+  @spec scene(list()) :: map()
   def scene(children) do
     %{
       id: "tiles_0",
@@ -43,9 +44,9 @@ defmodule RecordingConverter.Compositor do
   def video_output_id(), do: @video_output_id
 
   @spec generate_output_update(map(), number(), map()) :: [struct()]
-  def generate_output_update(tracks, timestamp, video_tracks_offset),
+  def generate_output_update(tracks, timestamp, camera_tracks_offset),
     do: [
-      generate_video_output_update(tracks, timestamp, video_tracks_offset),
+      generate_video_output_update(tracks, timestamp, camera_tracks_offset),
       generate_audio_output_update(tracks, timestamp)
     ]
 
@@ -82,24 +83,35 @@ defmodule RecordingConverter.Compositor do
   defp generate_video_output_update(
          %{"video" => video_tracks, "audio" => audio_tracks},
          timestamp,
-         video_tracks_offset
+         camera_tracks_offset
        )
        when is_list(video_tracks) do
-    video_tracks_origin = Enum.map(video_tracks, fn track -> track["origin"] end)
+    {camera_tracks, screenshare_tracks} =
+      Enum.split_with(video_tracks, &(get_in(&1, ["metadata", "type"]) != "screensharing"))
+
+    camera_tracks_origin = Enum.map(camera_tracks, fn track -> track["origin"] end)
 
     avatar_tracks =
       Enum.filter(
         audio_tracks,
-        &should_have_avatar?(&1, timestamp, video_tracks_origin, video_tracks_offset)
+        &should_have_avatar?(&1, timestamp, camera_tracks_origin, camera_tracks_offset)
       )
 
-    avatars_config = Enum.map(avatar_tracks, &avatar_view/1)
-    video_tracks_config = Enum.map(video_tracks, &video_input_source_view/1)
+    camera_tracks_config =
+      Enum.map(camera_tracks, &video_input_source_view/1) ++
+        Enum.map(avatar_tracks, &avatar_view/1)
+
+    screenshare_tracks_config = Enum.map(screenshare_tracks, &video_input_source_view/1)
+
+    scene =
+      if screenshare_tracks_config != [],
+        do: scene_with_screenshare(camera_tracks_config, screenshare_tracks_config),
+        else: scene(camera_tracks_config)
 
     %Request.UpdateVideoOutput{
       output_id: @video_output_id,
       schedule_time: Membrane.Time.nanoseconds(timestamp),
-      root: scene(video_tracks_config ++ avatars_config)
+      root: scene
     }
   end
 
@@ -112,26 +124,43 @@ defmodule RecordingConverter.Compositor do
     }
   end
 
+  defp scene_with_screenshare(camera_children, screenshare_children) do
+    %{
+      type: :view,
+      width: @output_width,
+      height: @output_height,
+      direction: :row,
+      children: [
+        %{
+          type: :tiles,
+          width: @output_width * @screenshare_ratio,
+          children: screenshare_children
+        },
+        %{type: :tiles, children: camera_children}
+      ]
+    }
+  end
+
   defp should_have_avatar?(
          %{"origin" => origin} = track,
          timestamp,
-         video_tracks_origin,
-         video_tracks_offset
+         camera_tracks_origin,
+         camera_tracks_offset
        ) do
-    origin not in video_tracks_origin and
+    origin not in camera_tracks_origin and
       longer_than_treshold?(track, timestamp) and
-      not has_video_in_threshold?(origin, video_tracks_offset, timestamp)
+      not has_video_in_threshold?(origin, camera_tracks_offset, timestamp)
   end
 
   defp longer_than_treshold?(%{"offset" => offset} = track, timestamp) do
     ReportParser.calculate_track_end(track, offset) - timestamp > @avatar_threshold_ns
   end
 
-  defp has_video_in_threshold?(origin, video_tracks_offset, timestamp) do
+  defp has_video_in_threshold?(origin, camera_tracks_offset, timestamp) do
     threshold = timestamp + @avatar_threshold_ns
 
     next_video_offset =
-      video_tracks_offset
+      camera_tracks_offset
       |> Map.get(origin, [])
       |> Enum.find(threshold, &(&1 > timestamp))
 

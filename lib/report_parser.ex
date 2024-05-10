@@ -19,10 +19,10 @@ defmodule RecordingConverter.ReportParser do
   @spec get_all_track_actions(tracks :: list()) :: list()
   def get_all_track_actions(tracks) do
     tracks_actions = get_track_actions(tracks)
-    video_tracks_offset = get_video_tracks_offset(tracks)
+    camera_tracks_offset = get_camera_tracks_offset(tracks)
 
     update_scene_notifications =
-      create_update_scene_notifications(tracks_actions, video_tracks_offset)
+      create_update_scene_notifications(tracks_actions, camera_tracks_offset)
 
     unregister_output_actions = generate_unregister_output_actions(tracks_actions)
 
@@ -61,10 +61,11 @@ defmodule RecordingConverter.ReportParser do
     |> Jason.decode!()
   end
 
-  defp get_video_tracks_offset(tracks) do
-    # TODO: remove screenshare tracks, after adding necessary info to reports
+  defp get_camera_tracks_offset(tracks) do
     tracks
-    |> Enum.filter(&(&1["type"] == "video"))
+    |> Enum.filter(
+      &(&1["type"] == "video" and get_in(&1, ["metadata", "type"]) != "screensharing")
+    )
     |> Enum.reduce(%{}, fn %{"origin" => origin, "offset" => offset}, acc ->
       Map.update(acc, origin, [offset], &[offset | &1])
     end)
@@ -84,16 +85,16 @@ defmodule RecordingConverter.ReportParser do
     |> Enum.sort_by(fn {_atom, _track, timestamp} -> timestamp end)
   end
 
-  defp create_update_scene_notifications(track_actions, video_tracks_offset) do
+  defp create_update_scene_notifications(track_actions, camera_tracks_offset) do
     track_actions
     |> Enum.map_reduce(%{"audio" => [], "video" => []}, fn
       {:start, %{"type" => type} = track, timestamp}, acc ->
         acc = Map.update!(acc, type, &[track | &1])
-        {Compositor.generate_output_update(acc, timestamp, video_tracks_offset), acc}
+        {Compositor.generate_output_update(acc, timestamp, camera_tracks_offset), acc}
 
       {:end, %{"type" => type} = track, timestamp}, acc ->
         acc = Map.update!(acc, type, fn tracks -> Enum.reject(tracks, &(&1 == track)) end)
-        {Compositor.generate_output_update(acc, timestamp, video_tracks_offset), acc}
+        {Compositor.generate_output_update(acc, timestamp, camera_tracks_offset), acc}
     end)
     |> then(fn {actions, _acc} -> actions end)
     |> List.flatten()
