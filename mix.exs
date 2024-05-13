@@ -66,7 +66,7 @@ defmodule RecordingConverter.Mixfile do
       {:jason, "~> 1.0"},
       {:membrane_live_compositor_plugin,
        github: "membraneframework/membrane_live_compositor_plugin",
-       ref: "c8a5d0172f6944eaa618003ddbf365fd557dfe16"},
+       branch: "@wkozyra95/send-bye-packet-on-eos"},
 
       # aws deps
       {:ex_aws, "~> 2.1"},
