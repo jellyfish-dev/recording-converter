@@ -223,7 +223,8 @@ defmodule RecordingConverter.Compositor do
             text: label,
             align: "center",
             width: label_width,
-            font_size: 20.0
+            font_size: 20.0,
+            font_family: "JetBrains Mono"
           },
           %{type: :view}
         ]
