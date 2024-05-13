@@ -265,6 +265,7 @@ RUN apt-get update \
   clang-format \
   curl \
   wget \
+  unzip \
   build-essential
 
 RUN cd /tmp/ \
@@ -276,10 +277,18 @@ RUN cd /tmp/ \
   && rm -rf /tmp/*
 
 # Add fonts
-RUN wget -O fonts.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/JetBrainsMono.zip
-RUN unzip fonts.zip -d fonts
-RUN mv fonts/* ~/.fonts/
-RUN fc-cache -fv
+# RUN wget -O fonts.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/JetBrainsMono.zip \
+#   && mkdir -p /usr/share/fonts/truetype/jetbrains \
+#   && unzip fonts.zip -d /usr/share/fonts/truetype/jetbrains/ \
+#   && fc-cache -f -v \
+#   && rm fonts.zip
+
+
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends --reinstall ttf-mscorefonts-installer fonts-noto-color-emoji && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* /var/cache/*
+
 
 RUN apt remove build-essential -y \
   wget \
