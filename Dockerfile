@@ -275,11 +275,18 @@ RUN cd /tmp/ \
   && cd / \
   && rm -rf /tmp/*
 
+# Add fonts
+RUN wget -O fonts.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/JetBrainsMono.zip
+RUN unzip fonts.zip -d fonts
+RUN mv fonts/* ~/.fonts/
+RUN fc-cache -fv
+
 RUN apt remove build-essential -y \
   wget \
   && apt autoremove -y
 
 WORKDIR /app
+
 
 COPY --from=build_elixir /app/_build/prod/rel/recording_converter ./
 # COPY --from=builder /root/project/target/release compositor
