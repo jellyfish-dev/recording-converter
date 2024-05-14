@@ -215,7 +215,7 @@ defmodule RecordingConverter.Compositor do
         bottom: 20,
         right: 20,
         width: label_width,
-        height: 20,
+        height: 25,
         background_color_rgba: "#000000FF",
         children: [
           %{type: :view},
