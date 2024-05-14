@@ -277,13 +277,6 @@ RUN cd /tmp/ \
   && rm -rf /tmp/*
 
 # Add fonts
-RUN wget -O fonts.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/JetBrainsMono.zip \
-  && mkdir -p /usr/share/fonts/truetype/jetbrains \
-  && unzip fonts.zip -d /usr/share/fonts/truetype/jetbrains/ \
-  && fc-cache -f -v \
-  && rm fonts.zip
-
-
 RUN apt-get update && \
   apt-get install -y --no-install-recommends --reinstall ttf-mscorefonts-installer fonts-noto-color-emoji && \
   apt-get clean && \
