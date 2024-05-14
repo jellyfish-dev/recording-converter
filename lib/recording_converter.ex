@@ -125,7 +125,13 @@ defmodule RecordingConverter do
     output_directory = Application.fetch_env!(:recording_converter, :output_dir_path)
 
     if String.starts_with?(output_directory, ".") do
-      convert_to_absolute_path(output_directory)
+      output_directory =
+        output_directory
+        |> Path.split()
+        |> Enum.drop(1)
+        |> Path.join()
+
+      "#{s3_directory()}/#{output_directory}"
     else
       output_directory
     end
@@ -133,14 +139,5 @@ defmodule RecordingConverter do
 
   defp image_url() do
     Application.fetch_env!(:recording_converter, :image_url)
-  end
-
-  defp convert_to_absolute_path(output_directory) do
-    s3_directory()
-    |> Path.join(output_directory)
-    |> Path.expand("")
-    |> Path.split()
-    |> Enum.drop(1)
-    |> Path.join()
   end
 end
