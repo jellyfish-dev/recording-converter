@@ -64,7 +64,7 @@ defmodule RecordingConverter.Mixfile do
       {:jason, "~> 1.0"},
       {:membrane_live_compositor_plugin,
        github: "membraneframework/membrane_live_compositor_plugin",
-       ref: "c8a5d0172f6944eaa618003ddbf365fd557dfe16"},
+       ref: "f1290d0d32fe69b8c356ce9fb846a1ae4e76a5bf"},
 
       # aws deps
       {:ex_aws, "~> 2.1"},
