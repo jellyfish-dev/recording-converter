@@ -8,4 +8,7 @@ config :logger,
     [level_lower_than: :info]
   ]
 
+config :ex_aws,
+  normalize_path: false
+
 import_config "#{config_env()}.exs"
