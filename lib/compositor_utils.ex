@@ -212,7 +212,7 @@ defmodule RecordingConverter.Compositor do
     [
       %{
         type: :view,
-        bottom: 20,
+        bottom: 10,
         right: 20,
         width: label_width,
         height: 25,
