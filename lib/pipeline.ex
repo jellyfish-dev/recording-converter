@@ -219,8 +219,7 @@ defmodule RecordingConverter.Pipeline do
     })
     |> child({:input_parser, track.id}, %Membrane.H264.Parser{
       output_alignment: :nalu,
-      output_stream_structure: :annexb,
-      generate_best_effort_timestamps: %{framerate: {0, 1}}
+      output_stream_structure: :annexb
     })
     |> via_in(Pad.ref(:video_input, track.id),
       options: [

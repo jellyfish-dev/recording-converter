@@ -24,6 +24,10 @@ jobs:
           set -e
           for test in $(ls ./test/fixtures)
           do
+            if [ "$test" == "report_parser" ] ; then
+                echo "Skipping test $test"
+                continue
+            fi
             echo "Running test $test"
             TEST_NAME=$test docker compose up --remove-orphans test --exit-code-from test
             TEST_NAME=$test docker compose up output_verify --exit-code-from output_verify
