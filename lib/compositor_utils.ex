@@ -212,10 +212,10 @@ defmodule RecordingConverter.Compositor do
     [
       %{
         type: :view,
-        bottom: 10,
+        bottom: 0,
         right: 20,
         width: label_width,
-        height: 25,
+        height: 30,
         background_color_rgba: "#000000FF",
         children: [
           %{type: :view},
@@ -234,7 +234,7 @@ defmodule RecordingConverter.Compositor do
 
   defp text_view(_metadata), do: []
 
-  def contains_emoji?(str) do
+  defp contains_emoji?(str) do
     # Unicode range for the emoji
     pattern = ~r/[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{1F1E0}-\x{1F1FF}]/u
 
