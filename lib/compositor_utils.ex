@@ -212,21 +212,19 @@ defmodule RecordingConverter.Compositor do
     [
       %{
         type: :view,
-        bottom: 0,
+        bottom: 20,
         right: 20,
         width: label_width,
-        height: 30,
+        height: 20,
         background_color_rgba: "#000000FF",
         children: [
-          %{type: :view},
           %{
             type: :text,
             text: label,
             align: "center",
             width: label_width,
             font_size: 20.0
-          },
-          %{type: :view}
+          }
         ]
       }
     ]
