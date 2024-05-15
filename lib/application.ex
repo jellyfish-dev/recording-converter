@@ -11,6 +11,10 @@ defmodule RecordingConverter.Application do
   def start(_type, _args) do
     children =
       if Application.get_env(:recording_converter, :start_recording_converter?) do
+        System.trap_signal(:sigterm, fn ->
+          Application.fetch_env!(:recording_converter, :terminator).terminate(1)
+        end)
+
         [RecordingConverter]
       else
         []
