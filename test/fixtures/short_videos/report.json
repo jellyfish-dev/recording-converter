@@ -10,35 +10,33 @@
       "end_timestamp": 2620691744,
       "origin": 1
     },
-    "87b2a39e-b62a-48b4-bc37-135da9c4d0d1.msr": {
-      "offset": 10000000000,
-      "type": "video",
-      "encoding": "H264",
-      "metadata": null,
+    "e52613bb-2fe9-47b6-9736-69bddea43ff0.msr": {
       "clock_rate": 90000,
-      "start_timestamp": 493739605,
-      "end_timestamp": 493951365,
-      "origin": 1
+      "encoding": "H264",
+      "end_timestamp": 565228955,
+      "metadata": {
+        "active": true,
+        "displayName": "kaaaarol",
+        "type": "camera"
+      },
+      "offset": 216306574093,
+      "origin": "d1ef6b0e-0cd8-44be-af34-8c0007e7ac33",
+      "start_timestamp": 565228955,
+      "type": "video"
     },
-    "8d49170b-d6d3-497d-ba5c-ba2837247b3c.msr": {
-      "offset": 100000000,
-      "type": "video",
-      "encoding": "H264",
-      "metadata": null,
+    "8ef2581a-b5b5-45ba-8b3c-006431590bb4.msr": {
       "clock_rate": 90000,
-      "start_timestamp": 2356366771,
-      "end_timestamp": 2356455401,
-      "origin": 1
-    },
-    "9cfd9266-2256-406b-b9a1-03383243d1d8.msr": {
-      "offset": 1000000,
-      "type": "video",
       "encoding": "H264",
-      "metadata": null,
-      "clock_rate": 90000,
-      "start_timestamp": 3020099711,
-      "end_timestamp": 3020120681,
-      "origin": 1
+      "end_timestamp": 2452111668,
+      "metadata": {
+        "active": true,
+        "displayName": "kaaaarol",
+        "type": "camera"
+      },
+      "offset": 213883453025,
+      "origin": "d1ef6b0e-0cd8-44be-af34-8c0007e7ac33",
+      "start_timestamp": 2452067838,
+      "type": "video"
     }
   },
   "recording_id": "74"
