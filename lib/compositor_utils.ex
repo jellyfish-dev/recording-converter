@@ -206,7 +206,8 @@ defmodule RecordingConverter.Compositor do
   end
 
   defp text_view(%{"displayName" => label}) do
-    label_width = String.length(label) * @letter_width + @text_margin
+    letter_width = if contains_emoji?(label), do: @letter_width * 2, else: @letter_width
+    label_width = String.length(label) * letter_width + @text_margin
 
     [
       %{
@@ -217,19 +218,24 @@ defmodule RecordingConverter.Compositor do
         height: 20,
         background_color_rgba: "#000000FF",
         children: [
-          %{type: :view},
           %{
             type: :text,
             text: label,
             align: "center",
             width: label_width,
             font_size: 20.0
-          },
-          %{type: :view}
+          }
         ]
       }
     ]
   end
 
   defp text_view(_metadata), do: []
+
+  defp contains_emoji?(str) do
+    # Unicode range for the emoji
+    pattern = ~r/[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{1F1E0}-\x{1F1FF}]/u
+
+    Regex.match?(pattern, str)
+  end
 end

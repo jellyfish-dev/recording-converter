@@ -265,6 +265,7 @@ RUN apt-get update \
   clang-format \
   curl \
   wget \
+  unzip \
   build-essential
 
 RUN cd /tmp/ \
@@ -275,11 +276,19 @@ RUN cd /tmp/ \
   && cd / \
   && rm -rf /tmp/*
 
+# Add fonts
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends --reinstall ttf-mscorefonts-installer fonts-noto-color-emoji && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* /var/cache/*
+
+
 RUN apt remove build-essential -y \
   wget \
   && apt autoremove -y
 
 WORKDIR /app
+
 
 COPY --from=build_elixir /app/_build/prod/rel/recording_converter ./
 # COPY --from=builder /root/project/target/release compositor
