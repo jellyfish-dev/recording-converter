@@ -14,6 +14,11 @@ defmodule RecordingConverter.Compositor do
 
   @avatar_threshold_ns 1_000_000_000
 
+  @spec avatar_threshold_ns() :: non_neg_integer()
+  def avatar_threshold_ns() do
+    @avatar_threshold_ns
+  end
+
   @spec server_setup(binary) :: :start_locally | {:start_locally, String.t()}
   def server_setup(compositor_path) do
     compositor_path = compositor_path
