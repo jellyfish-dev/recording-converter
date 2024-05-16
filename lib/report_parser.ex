@@ -13,6 +13,9 @@ defmodule RecordingConverter.ReportParser do
     bucket_name
     |> get_report(report_path)
     |> Map.fetch!("tracks")
+    |> Enum.reject(fn {_key, track} ->
+      calculate_duration_in_ns(track) < Compositor.avatar_threshold_ns()
+    end)
     |> Enum.map(fn {key, value} -> Map.put(value, :id, key) end)
   end
 
@@ -31,24 +34,7 @@ defmodule RecordingConverter.ReportParser do
 
   @spec calculate_track_end(map(), non_neg_integer()) :: non_neg_integer()
   def calculate_track_end(track, offset) do
-    clock_rate_ms = div(track["clock_rate"], 1_000)
-
-    end_timestamp = track["end_timestamp"]
-    start_timestamp = track["start_timestamp"]
-
-    timestamp_difference =
-      if end_timestamp < start_timestamp do
-        end_timestamp + @max_timestamp_value - start_timestamp
-      else
-        end_timestamp - start_timestamp
-      end
-
-    difference_in_milliseconds = div(timestamp_difference, clock_rate_ms)
-
-    duration =
-      (difference_in_milliseconds - @delta_timestamp_milliseconds)
-      |> Membrane.Time.milliseconds()
-      |> Membrane.Time.as_nanoseconds(:round)
+    duration = calculate_duration_in_ns(track)
 
     offset + duration
   end
@@ -137,6 +123,26 @@ defmodule RecordingConverter.ReportParser do
     video_end_timestamp = calculate_end_timestamp(video_tracks)
 
     {audio_end_timestamp, video_end_timestamp}
+  end
+
+  defp calculate_duration_in_ns(track) do
+    clock_rate_ms = div(track["clock_rate"], 1_000)
+
+    end_timestamp = track["end_timestamp"]
+    start_timestamp = track["start_timestamp"]
+
+    timestamp_difference =
+      if end_timestamp < start_timestamp do
+        end_timestamp + @max_timestamp_value - start_timestamp
+      else
+        end_timestamp - start_timestamp
+      end
+
+    difference_in_milliseconds = div(timestamp_difference, clock_rate_ms)
+
+    (difference_in_milliseconds - @delta_timestamp_milliseconds)
+    |> Membrane.Time.milliseconds()
+    |> Membrane.Time.as_nanoseconds(:round)
   end
 
   defp calculate_end_timestamp(tracks) do

@@ -60,7 +60,8 @@ defmodule RecordingConverter.PipelineTest do
       requests: 16,
       factor: 1
     },
-    %{type: "peers-before-recording-started", requests: 15, factor: 1}
+    %{type: "peers-before-recording-started", requests: 15, factor: 1},
+    %{type: "short_videos", requests: 4, factor: 1}
   ]
 
   for test <- tests do
