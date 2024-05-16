@@ -1,6 +1,6 @@
-# Jellygrinder WebRTC
+# Fishjam Grinder WebRTC
 
-Utility for running WebRTC stress-tests against [the Jellyfish Media Server](https://github.com/jellyfish-dev/jellyfish)
+Utility for running WebRTC stress-tests against [Fishjam Media Server](https://github.com/fishjam-dev/fishjam).
 
 ## Installation
 
