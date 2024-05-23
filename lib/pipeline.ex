@@ -224,6 +224,7 @@ defmodule RecordingConverter.Pipeline do
       output_alignment: :nalu,
       output_stream_structure: :annexb
     })
+    |> child({:filter_h264_metadata, track.id}, RecordingConverter.FilterH264)
     |> via_in(Pad.ref(:video_input, track.id),
       options: [
         offset: Membrane.Time.nanoseconds(track["offset"]),
