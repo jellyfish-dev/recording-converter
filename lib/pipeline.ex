@@ -158,7 +158,10 @@ defmodule RecordingConverter.Pipeline do
       options: [
         width: @output_width,
         height: @output_height,
-        encoder: %LiveCompositor.Encoder.FFmpegH264{preset: :veryfast},
+        encoder: %LiveCompositor.Encoder.FFmpegH264{
+          preset: :veryfast,
+          ffmpeg_options: %{"g" => "150"}
+        },
         initial: %{
           root: Compositor.scene([])
         }
