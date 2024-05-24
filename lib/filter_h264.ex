@@ -1,9 +1,9 @@
 defmodule RecordingConverter.FilterH264 do
   @moduledoc false
 
-  require Logger
-
   use Membrane.Filter
+
+  require Logger
 
   alias Membrane.Buffer
 
