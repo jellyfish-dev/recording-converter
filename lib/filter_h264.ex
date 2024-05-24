@@ -11,25 +11,21 @@ defmodule RecordingConverter.FilterH264 do
 
   @impl true
   def handle_init(_ctx, _options) do
-    {[], []}
+    {[], %{}}
   end
 
   @impl true
   def handle_buffer(_pad, %Buffer{} = buffer, _ctx, state) do
-    size = Enum.count(state)
+    type = buffer.metadata.h264.type
 
     cond do
-      buffer.metadata.h264.type in [:sps, :pps] ->
-        {[], [buffer | state]}
+      type in [:sps, :pps] ->
+        {[], Map.put(state, type, buffer)}
 
-      size > 0 ->
-        sps_buffer = find_buffer_with_type(state, :sps)
+      is_map_key(state, :sps) or is_map_key(state, :pps) ->
+        buffers = [state.sps, state.pps, buffer]
 
-        pps_buffer = find_buffer_with_type(state, :pps)
-
-        buffers = [sps_buffer, pps_buffer, buffer]
-
-        {buffers_to_actions(buffers), []}
+        {buffers_to_actions(buffers), %{}}
 
       true ->
         {[buffer: {:output, buffer}], state}
@@ -43,9 +39,5 @@ defmodule RecordingConverter.FilterH264 do
 
   defp buffers_to_actions(buffers) do
     Enum.flat_map(buffers, &[buffer: {:output, &1}])
-  end
-
-  defp find_buffer_with_type(buffers, type) do
-    Enum.find(buffers, fn buff -> buff.metadata.h264.type == type end)
   end
 end
