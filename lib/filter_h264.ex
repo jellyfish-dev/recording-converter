@@ -16,25 +16,37 @@ defmodule RecordingConverter.FilterH264 do
 
   @impl true
   def handle_buffer(_pad, %Buffer{} = buffer, _ctx, state) do
-    IO.inspect(buffer, label: :BUFFER)
-
     size = Enum.count(state)
 
     cond do
       buffer.metadata.h264.type in [:sps, :pps] ->
         {[], [buffer | state]}
 
-      size == 3 ->
-        buffers = Enum.take(state, 2) ++ [buffer]
+      size > 0 ->
+        buffers = Enum.take(state, 2)
 
-        {Enum.flat_map(buffers, &[buffer: {:output, &1}]), []}
+        buffers =
+          if size == 2 do
+            Enum.reverse(buffers)
+          else
+            buffers
+          end
 
-      size == 2 ->
-        buffers = state ++ [buffer]
-        {Enum.flat_map(buffers, &[buffer: {:output, &1}]), []}
+        buffers = buffers ++ [buffer]
+
+        {buffers_to_actions(buffers), []}
 
       true ->
         {[buffer: {:output, buffer}], state}
     end
+  end
+
+  @impl true
+  def handle_end_of_stream(_pad, _ctx, state) do
+    {buffers_to_actions(state) ++ [end_of_stream: :output], state}
+  end
+
+  defp buffers_to_actions(buffers) do
+    Enum.flat_map(buffers, &[buffer: {:output, &1}])
   end
 end

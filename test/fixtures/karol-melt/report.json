@@ -1,0 +1,35 @@
+{
+    "recording_id": "37",
+    "tracks": {
+        "1cf1a2a8-e30c-47bf-a209-0619cc3847be.msr": {
+            "offset": 3594174959,
+            "type": "video",
+            "origin": "7b125ebc-5d5d-4fa5-ad4b-1607e9a4c6ec",
+            "encoding": "H264",
+            "metadata": null,
+            "clock_rate": 90000,
+            "start_timestamp": 3643725625,
+            "end_timestamp": 3646057795
+        },
+        "a8dc8319-b609-4be0-8969-6f9fdb4c6f11.msr": {
+            "offset": 0,
+            "type": "video",
+            "origin": "2939faaf-ddfe-43f5-a6ee-af97a09c9e78",
+            "encoding": "H264",
+            "metadata": null,
+            "clock_rate": 90000,
+            "start_timestamp": 49550666,
+            "end_timestamp": 50499087
+        },
+        "f4713f9b-1adb-4b48-9246-9dc6ba6aaee0.msr": {
+            "offset": 3288245581,
+            "type": "video",
+            "origin": "7b125ebc-5d5d-4fa5-ad4b-1607e9a4c6ec",
+            "encoding": "H264",
+            "metadata": null,
+            "clock_rate": 90000,
+            "start_timestamp": 3337796247,
+            "end_timestamp": 3341106897
+        }
+    }
+}
