@@ -2,7 +2,7 @@ defmodule RecordingConverter.Mixfile do
   use Mix.Project
 
   @version "0.1.0"
-  @github_url "https://github.com/jellyfish-dev/recording-converter"
+  @github_url "https://github.com/fishjam-dev/recording-converter"
 
   def project do
     [
@@ -15,7 +15,7 @@ defmodule RecordingConverter.Mixfile do
       dialyzer: dialyzer(),
 
       # hex
-      description: "Job that converts Jellyfish recordings to other format",
+      description: "Job that converts Fishjam recordings to other format",
       package: package(),
 
       # docs
@@ -50,7 +50,7 @@ defmodule RecordingConverter.Mixfile do
   defp deps do
     [
       {:membrane_core, "~> 1.0"},
-      {:membrane_aws_plugin, github: "jellyfish-dev/membrane_aws_plugin"},
+      {:membrane_aws_plugin, github: "fishjam-dev/membrane_aws_plugin"},
       {:membrane_stream_plugin, "~> 0.4.0"},
       {:membrane_rtp_plugin, "~> 0.27.0"},
       {:membrane_rtp_opus_plugin, "~> 0.9.0"},

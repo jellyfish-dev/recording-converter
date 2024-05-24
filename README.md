@@ -1,9 +1,9 @@
 # Recording Converter
 
-[![codecov](https://codecov.io/gh/jellyfish-dev/recording-converter/branch/main/graph/badge.svg?token=ANWFKV2EDP)](https://codecov.io/gh/jellyfish-dev/recording-converter)
-[![CircleCI](https://circleci.com/gh/jellyfish-dev/recording-converter.svg?style=svg)](https://circleci.com/gh/jellyfish-dev/recording-converter)
+[![codecov](https://codecov.io/gh/fishjam-dev/recording-converter/branch/main/graph/badge.svg?token=ANWFKV2EDP)](https://codecov.io/gh/fishjam-dev/recording-converter)
+[![CircleCI](https://circleci.com/gh/fishjam-dev/recording-converter.svg?style=svg)](https://circleci.com/gh/fishjam-dev/recording-converter)
 
-Recording Converter is a docker image that allows to convert recording created with the use of [RecordingComponent](https://jellyfish-dev.github.io/jellyfish-docs/next/getting_started/components/recording) in Jellyfish to HLS.
+Recording Converter is a docker image that allows to convert recording created with the use of [RecordingComponent](https://fishjam-dev.github.io/fishjam-docs/next/getting_started/components/recording) in Fishjam to HLS.
 
 The environment variables possible to pass are:
 * `AWS_S3_ACCESS_KEY_ID` - access key ID to S3 bucket

@@ -49,7 +49,7 @@ defmodule RecordingConverter.RecordingTest do
 
     files = PipelineTest.get_files(test_type)
 
-    setup_multipart_download_backend(bucket, report_path, output_dir_path, files, 25)
+    setup_multipart_download_backend(bucket, report_path, output_dir_path, files, 28)
 
     {:ok, pid} = RecordingConverter.start()
 
@@ -81,7 +81,7 @@ defmodule RecordingConverter.RecordingTest do
       report_path,
       "test_path/output",
       files,
-      25
+      28
     )
 
     {:ok, pid} = RecordingConverter.start()
@@ -240,7 +240,7 @@ defmodule RecordingConverter.RecordingTest do
         {:ok, %{status_code: 401}}
       end)
 
-    expect(ExAws.Request.HttpMock, :request, 14, request_handler)
+    expect(ExAws.Request.HttpMock, :request, 15, request_handler)
 
     Process.sleep(100)
   end

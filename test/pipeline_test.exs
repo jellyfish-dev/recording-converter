@@ -52,16 +52,17 @@ defmodule RecordingConverter.PipelineTest do
     %{type: "multiple-audios-and-one-video", requests: 12, factor: 1},
     %{type: "long-video", requests: 16, factor: 5},
     %{type: "first-only-audio-second-only-video-third-audio-and-video", requests: 21, factor: 1},
-    %{type: "grid-limits", requests: 49, factor: 2},
+    %{type: "grid-limits", requests: 49, factor: 3},
     %{type: "only-audio", requests: 6, factor: 1},
     %{type: "peer-disconnected-during-recording-and-then-comeback", requests: 10, factor: 1},
     %{
       type: "peer-removes-their-track-during-recording-but-stays-in-the-room",
       requests: 16,
-      factor: 1
+      factor: 3
     },
     %{type: "peers-before-recording-started", requests: 15, factor: 1},
-    %{type: "short_videos", requests: 4, factor: 1}
+    %{type: "short_videos", requests: 4, factor: 1},
+    %{type: "karol-melt", requests: 35, factor: 1}
   ]
 
   for test <- tests do
