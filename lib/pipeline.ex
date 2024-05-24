@@ -14,6 +14,7 @@ defmodule RecordingConverter.Pipeline do
   @output_height 720
   @output_streams_number 2
   @report_file "report.json"
+  @framerate 30
 
   @impl true
   def handle_init(_ctx, opts) do
@@ -160,7 +161,7 @@ defmodule RecordingConverter.Pipeline do
         height: @output_height,
         encoder: %LiveCompositor.Encoder.FFmpegH264{
           preset: :veryfast,
-          ffmpeg_options: %{"g" => "150"}
+          ffmpeg_options: %{"g" => Integer.to_string(@framerate * @segment_duration)}
         },
         initial: %{
           root: Compositor.scene([])
@@ -168,7 +169,7 @@ defmodule RecordingConverter.Pipeline do
       ]
     )
     |> child(:output_video_parser, %Membrane.H264.Parser{
-      generate_best_effort_timestamps: %{framerate: {30, 1}},
+      generate_best_effort_timestamps: %{framerate: {@framerate, 1}},
       output_alignment: :nalu
     })
     |> via_in(Pad.ref(:input, :video),
@@ -182,7 +183,7 @@ defmodule RecordingConverter.Pipeline do
 
   defp generate_output_audio_branch(state, compositor_actions) do
     child(:video_compositor, %Membrane.LiveCompositor{
-      framerate: {30, 1},
+      framerate: {@framerate, 1},
       composing_strategy: :offline_processing,
       server_setup: Compositor.server_setup(state.compositor_path),
       init_requests: compositor_actions

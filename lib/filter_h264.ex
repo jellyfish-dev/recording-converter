@@ -5,9 +5,9 @@ defmodule RecordingConverter.FilterH264 do
 
   alias Membrane.Buffer
 
-  def_input_pad :input, accepted_format: _accepted_format
+  def_input_pad :input, accepted_format: Membrane.H264
 
-  def_output_pad :output, accepted_format: _accepted_format
+  def_output_pad :output, accepted_format: Membrane.H264
 
   @impl true
   def handle_init(_ctx, _options) do
@@ -23,16 +23,14 @@ defmodule RecordingConverter.FilterH264 do
         {[], [buffer | state]}
 
       size > 0 ->
-        buffers = Enum.take(state, 2)
+        find_type = fn type ->
+          Enum.find(state, fn buff -> buff.metadata.h264.type == type end)
+        end
 
-        buffers =
-          if size == 2 do
-            Enum.reverse(buffers)
-          else
-            buffers
-          end
+        sps_buffer = find_type.(:sps)
+        pps_buffer = find_type.(:pps)
 
-        buffers = buffers ++ [buffer]
+        buffers = [sps_buffer, pps_buffer, buffer]
 
         {buffers_to_actions(buffers), []}
 
