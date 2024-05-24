@@ -27,7 +27,7 @@ defmodule RecordingConverter.FilterH264 do
       is_map_key(state, :sps) and is_map_key(state, :pps) ->
         buffers = [state.sps, state.pps, buffer]
 
-        {buffers_to_actions(buffers), %{}}
+        {[buffer: {:output, buffers}], %{}}
 
       map_size(state) > 0 ->
         raise "Stream lacks sps or pps which will lead to decoder deadlock"
@@ -39,10 +39,8 @@ defmodule RecordingConverter.FilterH264 do
 
   @impl true
   def handle_end_of_stream(_pad, _ctx, state) do
-    {buffers_to_actions(state) ++ [end_of_stream: :output], state}
-  end
+    buffers = [Map.get(state, :sps), Map.get(state, :pps)] |> Enum.reject(&is_nil/1)
 
-  defp buffers_to_actions(buffers) do
-    Enum.flat_map(buffers, &[buffer: {:output, &1}])
+    {[buffer: {:output, buffers}, end_of_stream: :output], state}
   end
 end
