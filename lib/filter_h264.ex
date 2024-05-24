@@ -1,6 +1,8 @@
 defmodule RecordingConverter.FilterH264 do
   @moduledoc false
 
+  require Logger
+
   use Membrane.Filter
 
   alias Membrane.Buffer
@@ -22,10 +24,13 @@ defmodule RecordingConverter.FilterH264 do
       type in [:sps, :pps] ->
         {[], Map.put(state, type, buffer)}
 
-      is_map_key(state, :sps) or is_map_key(state, :pps) ->
+      is_map_key(state, :sps) and is_map_key(state, :pps) ->
         buffers = [state.sps, state.pps, buffer]
 
         {buffers_to_actions(buffers), %{}}
+
+      map_size(state) > 0 ->
+        raise "Stream lacks sps or pps which will lead to decoder deadlock"
 
       true ->
         {[buffer: {:output, buffer}], state}
