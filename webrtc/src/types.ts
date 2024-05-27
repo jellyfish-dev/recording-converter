@@ -1,8 +1,8 @@
-import { TrackEncoding } from "@jellyfish-dev/ts-client-sdk";
+import { TrackEncoding } from "@fishjam-dev/ts-client";
 
 export type Args = {
-  jellyfishAddress: string;
-  jellyfishToken: string;
+  fishjamAddress: string;
+  fishjamToken: string;
   secure: boolean;
   peers: number;
   peersPerRoom: number;
@@ -24,7 +24,7 @@ export type PeerResponse = {
 
 export type RoomResponse = {
   data: {
-    jellyfish_address: string;
+    fishjam_address: string;
     room: Room;
   };
 };
@@ -40,8 +40,8 @@ export type Room = {
   config: object;
 };
 
-export type JellyfishConfig = {
-  jellyfishAddress: string;
+export type FishjamConfig = {
+  fishjamAddress: string;
   secure: boolean;
   targetEncoding: TrackEncoding;
   activeEncodings: TrackEncoding[];

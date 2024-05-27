@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "@jellyfish-dev/ts-client-sdk": "^0.2.1",
+    "@fishjam-dev/ts-client": "^0.5.0",
     "@types/cli-progress": "^3.11.4",
     "@types/node": "^20.8.10",
     "@types/yargs": "^17.0.29",

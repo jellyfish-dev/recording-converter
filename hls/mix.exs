@@ -26,7 +26,7 @@ defmodule Jellygrinder.MixProject do
     [
       {:mint, "~> 1.5"},
       {:castore, "~> 1.0"},
-      {:jellyfish_server_sdk, "~> 0.2.0"},
+      {:fishjam_server_sdk, "~> 0.6.0"},
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
       {:credo, ">= 0.0.0", only: :dev, runtime: false}
     ]

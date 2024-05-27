@@ -89,7 +89,7 @@ defmodule Jellygrinder.Client.LLHLS do
       )
       |> Enum.map(&String.to_integer/1)
 
-    # This may not be the correct client behaviour, but it is handled by Jellyfish
+    # This may not be the correct client behaviour, but it is handled by Fishjam
     # TODO: rewrite when the client starts handling preload hints
     "?_HLS_msn=#{last_msn}&_HLS_part=#{last_part + 1}"
   end

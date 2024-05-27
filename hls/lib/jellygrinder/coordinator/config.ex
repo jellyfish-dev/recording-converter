@@ -8,7 +8,7 @@ defmodule Jellygrinder.Coordinator.Config do
   ]
 
   @type t :: %__MODULE__{
-          client_config: Jellyfish.Client.connection_options(),
+          client_config: Fishjam.Client.connection_options(),
           url: String.t() | nil,
           clients: pos_integer(),
           time: pos_integer(),
@@ -28,9 +28,9 @@ defmodule Jellygrinder.Coordinator.Config do
   @spec fill_hls_url!(t()) :: t() | no_return()
   def fill_hls_url!(%{url: nil} = config) do
     client_config = Keyword.merge(@default_client_config, config.client_config)
-    client = Jellyfish.Client.new(client_config)
+    client = Fishjam.Client.new(client_config)
 
-    case Jellyfish.Room.get_all(client) do
+    case Fishjam.Room.get_all(client) do
       {:ok, [room | _rest]} ->
         protocol = if client_config[:secure?], do: "https", else: "http"
 
@@ -40,10 +40,10 @@ defmodule Jellygrinder.Coordinator.Config do
         }
 
       {:ok, []} ->
-        raise "No rooms present on Jellyfish"
+        raise "No rooms present on Fishjam"
 
       {:error, reason} ->
-        raise "Error communicating with Jellyfish: #{inspect(reason)}"
+        raise "Error communicating with Fishjam: #{inspect(reason)}"
     end
   end
 

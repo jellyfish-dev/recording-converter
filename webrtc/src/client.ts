@@ -1,22 +1,22 @@
 import { RoomResponse, PeerResponse, RoomsResponse } from "./types";
 
 export class Client {
-  jellyfishAddress: string;
-  jellyfishToken: string;
+  fishjamAddress: string;
+  fishjamToken: string;
 
   constructor({
-    jellyfishAddress,
-    jellyfishToken,
+    fishjamAddress,
+    fishjamToken,
     secure,
   }: {
-    jellyfishAddress: string;
-    jellyfishToken: string;
+    fishjamAddress: string;
+    fishjamToken: string;
     secure: boolean;
   }) {
     const protocol = secure ? "https" : "http";
 
-    this.jellyfishAddress = `${protocol}://${jellyfishAddress}`;
-    this.jellyfishToken = jellyfishToken;
+    this.fishjamAddress = `${protocol}://${fishjamAddress}`;
+    this.fishjamToken = fishjamToken;
   }
 
   createRoom = async () => {
@@ -53,13 +53,13 @@ export class Client {
     path: string,
     body?: object,
   ) => {
-    const response = await fetch(`${this.jellyfishAddress}${path}`, {
+    const response = await fetch(`${this.fishjamAddress}${path}`, {
       method: method,
       body: JSON.stringify(body),
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        authorization: `Bearer ${this.jellyfishToken}`,
+        authorization: `Bearer ${this.fishjamToken}`,
       },
     });
 

@@ -1,15 +1,15 @@
-import { JellyfishConfig } from "./types";
+import { FishjamConfig } from "./types";
 
 const { createServer } = require("vite");
 
-import { TrackEncoding } from "@jellyfish-dev/ts-client-sdk";
+import { TrackEncoding } from "@fishjam-dev/ts-client";
 
 export const startServer = async ({
-  jellyfishAddress,
+  fishjamAddress,
   secure,
   targetEncoding,
   activeEncodings,
-}: JellyfishConfig) => {
+}: FishjamConfig) => {
   const server = await createServer({
     configFile: false,
     root: "./frontend",
@@ -17,7 +17,7 @@ export const startServer = async ({
       port: 5005,
     },
     define: {
-      "process.env.JF_ADDR": JSON.stringify(jellyfishAddress),
+      "process.env.JF_ADDR": JSON.stringify(fishjamAddress),
       "process.env.JF_PROTOCOL": JSON.stringify(secure ? "wss" : "ws"),
       "process.env.TARGET_ENCODING": JSON.stringify(targetEncoding),
       "process.env.ACTIVE_ENCODINGS": JSON.stringify(activeEncodings.join("")),

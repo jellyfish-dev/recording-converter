@@ -7,13 +7,13 @@ import { startServer } from "./src/server";
 import { runBenchmark } from "./src/benchmarkRtc";
 
 const args = yargs(hideBin(process.argv))
-  .option("jellyfish-address", {
+  .option("fishjam-address", {
     type: "string",
-    description: "Address of Jellyfish server",
+    description: "Address of Fishjam server",
   })
-  .options("jellyfish-token", {
+  .options("fishjam-token", {
     type: "string",
-    description: "Jellyfish API token",
+    description: "Fishjam API token",
   })
   .option("secure", {
     type: "boolean",
@@ -54,8 +54,8 @@ const args = yargs(hideBin(process.argv))
     default: 16,
   })
   .demandOption([
-    "jellyfish-address",
-    "jellyfish-token",
+    "fishjam-address",
+    "fishjam-token",
     "peers",
     "peers-per-room",
     "chrome-executable",
@@ -67,7 +67,7 @@ const args = yargs(hideBin(process.argv))
 
   // Start the frontend server
   startServer({
-    jellyfishAddress: args.jellyfishAddress,
+    fishjamAddress: args.fishjamAddress,
     secure: args.secure,
     targetEncoding: args.targetEncoding,
     activeEncodings: args.availableEncodings,

@@ -1,5 +1,5 @@
 import { chromium, Browser } from "playwright";
-import { TrackEncoding } from "@jellyfish-dev/ts-client-sdk";
+import { TrackEncoding } from "@fishjam-dev/ts-client";
 import { Client } from "./client";
 import { Args } from "./types";
 import { getEncodingsReport, onEncodingsUpdate } from "./encodingReporter";

@@ -1,11 +1,11 @@
 import "./style.css";
 import "./mediaDevices.ts";
-import { JellyfishClient, Peer, TrackEncoding } from "@jellyfish-dev/ts-client-sdk";
+import { FishjamClient, TrackEncoding } from "@fishjam-dev/ts-client";
 import { startDevices } from "./mediaDevices";
 
 const startClient = () => {
   const params: QueryParams = parseQueryParams();
-  const client = new JellyfishClient<PeerMetadata, TrackMetadata>();
+  const client = new FishjamClient<PeerMetadata, TrackMetadata>();
   const targetEncoding: TrackEncoding = process.env.TARGET_ENCODING as TrackEncoding;
 
   client.addListener("joined", () => {
@@ -45,7 +45,7 @@ const startClient = () => {
   return client;
 };
 
-const addMediaTracks = (client: JellyfishClient<PeerMetadata, TrackMetadata>) => {
+const addMediaTracks = (client: FishjamClient<PeerMetadata, TrackMetadata>) => {
   const videoTrack = videoMediaStream.getVideoTracks()?.[0];
 
   const activeEncodings: TrackEncoding[] = process.env.ACTIVE_ENCODINGS?.split("") as TrackEncoding[];
@@ -54,7 +54,7 @@ const addMediaTracks = (client: JellyfishClient<PeerMetadata, TrackMetadata>) =>
     videoTrack,
     videoMediaStream,
     undefined,
-    { enabled: true, activeEncodings: activeEncodings },
+    { enabled: true, activeEncodings: activeEncodings, disabledEncodings: [] },
     new Map<TrackEncoding, number>([
       ["l", 150],
       ["m", 500],
