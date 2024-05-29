@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "@fishjam-dev/ts-client": "^0.5.0",
+    "@openapitools/openapi-generator-cli": "^2.13.4",
     "@types/cli-progress": "^3.11.4",
     "@types/node": "^20.8.10",
     "@types/yargs": "^17.0.29",
@@ -12,13 +13,9 @@
     "yargs": "^17.7.2"
   },
   "scripts": {
-    "setup": "npm i && cd frontend && npm i && cd ..",
-    "install-chrome": "npx playwright install chrome",
+    "format": "npx prettier . --write",
     "grind": "npx ts-node index.ts",
-    "format": "npx prettier . --write"
-  },
-  "dependencies": {
-    "catch-exit": "^1.2.2",
-    "cli-progress": "^3.12.0"
+    "install-chrome": "npx playwright install chrome",
+    "setup": "npm i && cd frontend && npm i && cd .."
   }
 }

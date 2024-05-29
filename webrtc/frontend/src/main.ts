@@ -11,16 +11,16 @@ const startClient = () => {
   client.addListener("joined", () => {
     console.log("Joined");
     if (params.activePeer) {
-      addMediaTracks(client);
+      // Timeout because there is some RC
+      // which causes the media stream not to be published
+      setTimeout(() => {
+        addMediaTracks(client);
+      }, 5000);
     }
   });
 
   client.addListener("trackReady", (trackContext) => {
     console.log("Track ready");
-
-    setTimeout(() => {
-      client.setTargetTrackEncoding(trackContext.trackId, targetEncoding);
-    }, 5000);
   });
 
   client.addListener("trackRemoved", (trackContext) => {
@@ -70,6 +70,8 @@ const addMediaTracks = (client: FishjamClient<PeerMetadata, TrackMetadata>) => {
 };
 
 const startEncodingLogging = (period: number) => {
+  const targetEncoding: TrackEncoding = process.env.TARGET_ENCODING as TrackEncoding;
+
   setInterval(() => {
     const tracks = client.getRemoteTracks();
     const trackEncodings = [];
@@ -79,6 +81,12 @@ const startEncodingLogging = (period: number) => {
 
       if (track.track?.kind == "video") {
         trackEncodings.push(track.encoding);
+
+        if (track.encoding != targetEncoding) {
+          setTimeout(() => {
+            client.setTargetTrackEncoding(track.trackId, targetEncoding);
+          }, 5000);
+        }
       }
     }
 

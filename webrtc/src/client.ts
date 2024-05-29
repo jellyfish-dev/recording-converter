@@ -1,8 +1,10 @@
-import { RoomResponse, PeerResponse, RoomsResponse } from "./types";
+import { RoomResponse, PeerResponse, RoomsResponse, Room } from "./types";
+
+import { RoomApi } from "../server-sdk";
+import axios from "axios";
 
 export class Client {
-  fishjamAddress: string;
-  fishjamToken: string;
+  api: RoomApi;
 
   constructor({
     fishjamAddress,
@@ -14,55 +16,52 @@ export class Client {
     secure: boolean;
   }) {
     const protocol = secure ? "https" : "http";
+    const jfAddress = `${protocol}://${fishjamAddress}`;
 
-    this.fishjamAddress = `${protocol}://${fishjamAddress}`;
-    this.fishjamToken = fishjamToken;
+    this.api = new RoomApi(
+      undefined,
+      jfAddress,
+      axios.create({
+        headers: {
+          Authorization: `Bearer ${fishjamToken}`,
+        },
+      }),
+    );
   }
 
-  createRoom = async () => {
-    const response = await this.request("POST", "/room/");
-
-    const content: RoomResponse = (await response.json()) as RoomResponse;
-    return content.data.room.id;
+  createRoom = async (roomId: string) => {
+    return (
+      await this.api.createRoom({
+        roomId: roomId,
+        videoCodec: "h264",
+        peerlessPurgeTimeout: 5,
+      })
+    ).data.data;
   };
 
   addPeer = async (roomId: string) => {
-    const response = await this.request("POST", `/room/${roomId}/peer`, {
-      type: "webrtc",
-      options: {},
-    });
+    return (
+      await this.api.addPeer(roomId, {
+        type: "webrtc",
+        options: { enableSimulcast: true },
+      })
+    ).data.data;
+  };
 
-    const content: PeerResponse = (await response.json()) as PeerResponse;
-    return content.data.token;
+  addHls = async (roomId: string) => {
+    return (
+      await this.api.addComponent(roomId, {
+        type: "hls",
+        options: { lowLatency: false },
+      })
+    ).data.data;
   };
 
   purge = async () => {
-    const roomsResponse = await this.request("GET", "/room");
-
-    const content: RoomsResponse =
-      (await roomsResponse.json()) as RoomsResponse;
-
-    const promises = content.data.map((room) =>
-      this.request("DELETE", `/room/${room.id}`),
-    );
-    await Promise.all(promises);
-  };
-
-  private request = async (
-    method: "GET" | "POST" | "DELETE",
-    path: string,
-    body?: object,
-  ) => {
-    const response = await fetch(`${this.fishjamAddress}${path}`, {
-      method: method,
-      body: JSON.stringify(body),
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        authorization: `Bearer ${this.fishjamToken}`,
-      },
+    this.api.getAllRooms().then((response) => {
+      response.data.data.forEach((room: Room) => {
+        this.api.deleteRoom(room.id);
+      });
     });
-
-    return response;
   };
 }

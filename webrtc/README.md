@@ -12,6 +12,9 @@ Ensure Chrome installation:
 `npm run install-chrome`
 The installation directory will vary, depending on the OS.
 
+Generate latest Jellyfish Server SDK client:
+`npx @openapitools/openapi-generator-cli generate -i https://raw.githubusercontent.com/fishjam-dev/fishjam/main/openapi.yaml -g typescript-axios -o ./server-sdk`
+
 ## Usage
 
 Run `npm run grind -- --help` for usage information.

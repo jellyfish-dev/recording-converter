@@ -51,7 +51,7 @@ const args = yargs(hideBin(process.argv))
   .option("peers-per-browser", {
     type: "integer",
     description: "Number of peers spawned per browser",
-    default: 16,
+    default: 1,
   })
   .demandOption([
     "fishjam-address",

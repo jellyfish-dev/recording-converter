@@ -52,6 +52,7 @@ export const runBenchmark = async (args: Args) => {
 const addPeers = async (args: Args) => {
   const client = new Client(args);
 
+  let roomCount = 0;
   let peersAdded = 0;
   let peersInCurrentBrowser = 0;
   let browsers: Array<Browser> = [];
@@ -60,19 +61,26 @@ const addPeers = async (args: Args) => {
   const { incomingBandwidth, outgoingBandwidth } = getEstimatedBandwidth(args);
 
   while (peersAdded < args.peers) {
-    const roomId = await client.createRoom();
+    const response = await client.createRoom(
+      `room${String(roomCount).padStart(2, "0")}`,
+    );
+    roomCount++;
 
     for (let j = 0; j < args.peersPerRoom && peersAdded < args.peers; j++) {
       await startPeer({
         browser: currentBrowser!,
         client: client,
-        roomId: roomId,
+        roomId: response.room.id,
         active: j < args.activePeers,
       });
       peersAdded++, peersInCurrentBrowser++;
 
       writeInPlace(
-        `Browsers launched: ${peersAdded} / ${args.peers}  Expected network usage: Incoming ${incomingBandwidth} Mbit/s, Outgoing ${outgoingBandwidth} Mbit/s`,
+        `Browsers launched: ${peersAdded} / ${
+          args.peers
+        }  Expected network usage: Incoming/Outgoing ${incomingBandwidth}/${outgoingBandwidth} Mbps/s,  ${
+          incomingBandwidth / 8
+        }/${outgoingBandwidth / 8} MBps/s`,
       );
       await delay(args.peerDelay);
 
@@ -122,7 +130,7 @@ const startPeer = async ({
   roomId: string;
   active: boolean;
 }) => {
-  const peerToken = await client.addPeer(roomId);
+  const peerToken = (await client.addPeer(roomId)).token;
 
   const context = await browser.newContext();
   const page = await context.newPage();
