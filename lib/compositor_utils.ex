@@ -129,6 +129,10 @@ defmodule RecordingConverter.Compositor do
     }
   end
 
+  defp scene_with_screenshare([], screenshare_children) do
+    scene(screenshare_children)
+  end
+
   defp scene_with_screenshare(camera_children, screenshare_children) do
     %{
       type: :view,
