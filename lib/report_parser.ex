@@ -17,6 +17,7 @@ defmodule RecordingConverter.ReportParser do
       calculate_duration_in_ns(track) < Compositor.avatar_threshold_ns()
     end)
     |> Enum.map(fn {key, value} -> Map.put(value, :id, key) end)
+    |> recalculate_offsets()
   end
 
   @spec get_all_track_actions(tracks :: list()) :: list()
@@ -152,5 +153,48 @@ defmodule RecordingConverter.ReportParser do
     else
       nil
     end
+  end
+
+  # Not every track will have a `start_timestamp_wallclock` value since this requires an RTCP sender packet.
+  # For this reason, the algorithm does not override track offsets lacking a `start_timestamp_wallclock`.
+  # However, for tracks that do come with a `start_timestamp_wallclock` value
+  # the algorithm recalculates the offset using the following formula:
+  # new_offset = ft.offset + (ct.start_timestamp_wallclock - ft.start_timstamp_wallclock)
+  # where:
+  #   * ft - first track that have `start_timestamp_wallclock` value set
+  #   * ct - current track for wchich we calculate new offset
+  defp recalculate_offsets(tracks) do
+    {tracks, _acc} =
+      tracks
+      |> Enum.sort_by(fn track -> track["offset"] end)
+      |> Enum.map_reduce(nil, fn track, acc ->
+        cond do
+          not Map.has_key?(track, "start_timestamp_wallclock") ->
+            {track, acc}
+
+          is_nil(acc) ->
+            {track, track}
+
+          true ->
+            offset =
+              acc["offset"] + track["start_timestamp_wallclock"] -
+                acc["start_timestamp_wallclock"]
+
+            {%{track | "offset" => trunc(offset)}, acc}
+        end
+      end)
+
+    %{"offset" => first_offset} =
+      Enum.min_by(tracks, fn track -> track["offset"] end, fn -> %{"offset" => 0} end)
+
+    if first_offset > 0,
+      do:
+        raise("The lower track offset is #{first_offset}, this offset cannot be greater than 0.")
+
+    # After RTCP synchronization, tracks can switch places.
+    # For example, a track that was second before synchronization can now be first.
+    # In this case, it will have a negative offset and we will need to correct it to 0.
+    # We also need to correct all other offsets to maintain the correct offsets between tracks.
+    Enum.map(tracks, fn track -> Map.update!(track, "offset", &(&1 - first_offset)) end)
   end
 end

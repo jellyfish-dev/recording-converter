@@ -2,7 +2,7 @@
   "recording_id": "id",
   "tracks": {
     "audio_FC45E6CF26C7683C.msr": {
-      "offset": 3445500,
+      "offset": 0,
       "type": "audio",
       "encoding": "OPUS",
       "metadata": null,

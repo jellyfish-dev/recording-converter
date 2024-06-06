@@ -221,6 +221,9 @@ defmodule RecordingConverter.Pipeline do
       depayloader: Membrane.RTP.H264.Depayloader,
       clock_rate: track["clock_rate"]
     })
+    |> child({:rtcp_sync, track.id}, %RecordingConverter.RTCPSynchronizer{
+      clock_rate: track["clock_rate"]
+    })
     |> child({:input_parser, track.id}, %Membrane.H264.Parser{
       output_alignment: :nalu,
       output_stream_structure: :annexb
