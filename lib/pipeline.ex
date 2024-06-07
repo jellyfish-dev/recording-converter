@@ -10,8 +10,8 @@ defmodule RecordingConverter.Pipeline do
   alias RecordingConverter.{Compositor, ReportParser}
 
   @segment_duration 3
-  @output_width 1280
-  @output_height 720
+  @output_width 1920
+  @output_height 1080
   @output_streams_number 2
   @report_file "report.json"
   @framerate 30

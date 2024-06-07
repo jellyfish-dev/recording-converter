@@ -6,8 +6,8 @@ defmodule RecordingConverter.Compositor do
 
   @text_margin 10
   @letter_width 12
-  @output_width 1280
-  @output_height 720
+  @output_width 1920
+  @output_height 1080
   @screenshare_ratio 0.8
   @video_output_id "video_output_1"
   @audio_output_id "audio_output_1"
