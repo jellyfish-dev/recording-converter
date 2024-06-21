@@ -1,6 +1,6 @@
 # Fishjam Grinder HLS
 
-Utility for running HLS and LL-HLS stress-tests against [Fishjam Media Server](https://github.com/fishjam-dev/fishjam).
+Utility for running HLS and LL-HLS stress-tests against [Fishjam Media Server](https://github.com/fishjam-cloud/fishjam).
 
 ## Installation
 

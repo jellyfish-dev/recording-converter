@@ -1,6 +1,6 @@
 # Fishjam Grinder WebRTC
 
-Utility for running WebRTC stress-tests against [Fishjam Media Server](https://github.com/fishjam-dev/fishjam).
+Utility for running WebRTC stress-tests against [Fishjam Media Server](https://github.com/fishjam-cloud/fishjam).
 
 ## Installation
 
@@ -12,8 +12,8 @@ Ensure Chrome installation:
 `npm run install-chrome`
 The installation directory will vary, depending on the OS.
 
-Generate latest Jellyfish Server SDK client:
-`npx @openapitools/openapi-generator-cli generate -i https://raw.githubusercontent.com/fishjam-dev/fishjam/main/openapi.yaml -g typescript-axios -o ./server-sdk`
+Generate latest Fishjam Server SDK client:
+`npx @openapitools/openapi-generator-cli generate -i https://raw.githubusercontent.com/fishjam-cloud/fishjam/main/openapi.yaml -g typescript-axios -o ./server-sdk`
 
 ## Usage
 

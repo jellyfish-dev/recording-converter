@@ -1,0 +1,51 @@
+name: CI
+
+on: push
+
+permissions:
+  contents: read
+     
+jobs:
+    hls:
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            shell: bash
+            working-directory: ./hls
+        name: HLS test 
+        strategy:
+          matrix:
+            otp: ['26']
+            elixir: ['1.16']
+        steps:
+            - name: Set up Elixir
+              uses: erlef/setup-beam@v1
+              with:
+                otp-version: ${{matrix.otp}}
+                elixir-version: ${{matrix.elixir}}
+            - name: Checkout the code
+              uses: actions/checkout@v3
+            - run: mix deps.get
+            - run: mix format --check-formatted
+            - run: mix compile --force --warnings-as-errors
+            - run: mix credo
+            - run: mix dialyzer
+            - run: mix test
+
+
+
+    webrtc:
+        runs-on: ubuntu-latest
+        container:
+          image: node:21-alpine3.17
+        defaults:
+          run:
+            working-directory: ./webrtc
+        name: WebRTC test 
+        steps:
+            - name: Checkout the code
+              uses: actions/checkout@v3
+            - run: npm run setup
+            - run: npx prettier . --check
+            - run: npm run grind -- --help
+            

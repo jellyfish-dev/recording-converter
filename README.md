@@ -1,6 +1,6 @@
 # Fishjam Grinder
 
-Utilities for running stress-tests against the [Fishjam Media Server](https://github.com/fishjam-dev/fishjam).
+Utilities for running stress-tests against the [Fishjam Media Server](https://github.com/fishjam-cloud/fishjam).
 
 To use a specific utility for testing a particular area, navigate to the corresponding subdirectory.
 
