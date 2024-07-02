@@ -6,21 +6,27 @@ const fs = require("fs");
 let rawTrackEncodings: RawTrackEncodings = new Map();
 let rawTrackScores: RawRtcScores = new Map();
 
-export const reportToString = () => {
-  const encoding = new EncodingsReport(rawTrackEncodings).toString();
+export const reportToString = (useSimulcast: boolean) => {
+  const encoding = new EncodingsReport(
+    rawTrackEncodings,
+    useSimulcast
+  ).toString();
   const rtcScore = new RtcScoreReport(rawTrackScores).toString();
 
   return `Encodings: ${encoding}, RtcScore: ${rtcScore}`;
 };
 
-
 export const createReportCSV = (path: string) => {
-  const csv_columns = `timestamp,min,max,q1,q2,q3,low,mid,high\n`
+  const csv_columns = `timestamp,min,max,q1,q2,q3,low,mid,high\n`;
   fs.writeFile(path, csv_columns, () => {});
-}
+};
 
-export const appendReportCSV = (path: string, timestamp: number) => {
-  const encoding = new EncodingsReport(rawTrackEncodings);
+export const appendReportCSV = (
+  path: string,
+  timestamp: number,
+  useSimulcast: boolean
+) => {
+  const encoding = new EncodingsReport(rawTrackEncodings, useSimulcast);
   const rtcScore = new RtcScoreReport(rawTrackScores);
 
   if (rtcScore.report === null) return;
@@ -28,11 +34,16 @@ export const appendReportCSV = (path: string, timestamp: number) => {
   const report = { ...rtcScore.report, encoding: encoding.report };
 
   // duration,min,max,q1,q2,q3,low,mid,high
-  const newLine = `${timestamp},${report.min.toFixed(2)},${report.max.toFixed(2)},${report.quartiles.Q1.toFixed(2)},${report.quartiles.Q2.toFixed(2)},${report.quartiles.Q3.toFixed(2)},${report.encoding.l},${report.encoding.m},${report.encoding.h}\n`;
+  const newLine = `${timestamp},${report.min.toFixed(2)},${report.max.toFixed(
+    2
+  )},${report.quartiles.Q1.toFixed(2)},${report.quartiles.Q2.toFixed(
+    2
+  )},${report.quartiles.Q3.toFixed(2)},${report.encoding.l},${
+    report.encoding.m
+  },${report.encoding.h}\n`;
 
   fs.appendFile(path, newLine, (err: any) => {});
 };
-
 
 export const onConsoleMessage = (msg: ConsoleMessage, peerToken: PeerToken) => {
   const content = msg.text().trim();
@@ -50,7 +61,7 @@ class EncodingsReport {
     h: number;
   };
 
-  constructor(reportRaw: Map<string, string>) {
+  constructor(reportRaw: Map<string, string>, useSimulcast: boolean) {
     const totalEncodings = { l: 0, m: 0, h: 0 };
 
     reportRaw.forEach((encodings: string, peerId: string) => {
@@ -62,7 +73,14 @@ class EncodingsReport {
       }
     });
 
-    this.report = totalEncodings;
+    if (useSimulcast) {
+      this.report = totalEncodings;
+    } else {
+      // when simulcast is not used, returned encoding is always high 
+      // even though encoding used in no simulcast test is always medium
+      const m = Object.values(totalEncodings).reduce((a, b) => a + b, 0);
+      this.report = { l: 0, m: m, h: 0 };
+    }
   }
 
   toString = () => {

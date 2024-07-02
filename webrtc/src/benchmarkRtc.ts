@@ -40,8 +40,8 @@ export const runBenchmark = async (args: Args) => {
     time < args.duration;
     step = Math.min(step, args.duration - time), time += step
   ) {
-    const report = reportToString();
-    appendReportCSV(args.csvReportPath, time);
+    const report = reportToString(args.useSimulcast);
+    appendReportCSV(args.csvReportPath, time, args.useSimulcast);
 
     writeInPlace(`Duration: ${time} / ${args.duration}s, ${report}`);
     await delay(step);
