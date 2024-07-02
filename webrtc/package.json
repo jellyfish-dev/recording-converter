@@ -17,5 +17,8 @@
     "grind": "npx ts-node index.ts",
     "install-chrome": "npx playwright install chrome",
     "setup": "npm i && cd frontend && npm i && cd .."
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
   }
 }

@@ -53,6 +53,16 @@ const args = yargs(hideBin(process.argv))
     description: "Number of peers spawned per browser",
     default: 1,
   })
+  .option("csv-report-path", {
+    type: "string",
+    description: "Path used to save csv report",
+    default: "./report.csv"
+  })
+  .option("use-simulcast", {
+    type: "boolean",
+    description: "If set to true simulcast will be enabled",
+    default: false
+  })
   .demandOption([
     "fishjam-address",
     "fishjam-token",
@@ -62,7 +72,7 @@ const args = yargs(hideBin(process.argv))
   ]).argv;
 
 (async () => {
-  args.targetEncoding = "h";
+  args.targetEncoding = args.useSimulcast ? "h" : "m";
   args.availableEncodings = ["l", "m", "h"];
 
   // Start the frontend server
@@ -71,6 +81,7 @@ const args = yargs(hideBin(process.argv))
     secure: args.secure,
     targetEncoding: args.targetEncoding,
     activeEncodings: args.availableEncodings,
+    useSimulcast: args.useSimulcast,
   });
 
   args.peersPerRoom = Math.min(args.peersPerRoom, args.peers);

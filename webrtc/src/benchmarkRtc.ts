@@ -2,7 +2,12 @@ import { chromium, Browser } from "playwright";
 import { TrackEncoding } from "@fishjam-dev/ts-client";
 import { Client } from "./client";
 import { Args } from "./types";
-import { getEncodingsReport, onEncodingsUpdate } from "./encodingReporter";
+import {
+  appendReportCSV,
+  createReportCSV,
+  onConsoleMessage,
+  reportToString,
+} from "./reporter";
 
 const frontendAddress = "http://localhost:5005";
 const fakeVideo = "media/sample_video.mjpeg";
@@ -24,6 +29,8 @@ export const runBenchmark = async (args: Args) => {
   const client = new Client(args);
   await client.purge();
 
+  createReportCSV(args.csvReportPath);
+
   const browsers = await addPeers(args);
 
   console.log("Started all browsers, running benchmark");
@@ -33,11 +40,10 @@ export const runBenchmark = async (args: Args) => {
     time < args.duration;
     step = Math.min(step, args.duration - time), time += step
   ) {
-    const report = getEncodingsReport();
+    const report = reportToString();
+    appendReportCSV(args.csvReportPath, time);
 
-    writeInPlace(
-      `${time} / ${args.duration}s, Encodings: ${report.toString()}}`,
-    );
+    writeInPlace(`Duration: ${time} / ${args.duration}s, ${report}`);
     await delay(step);
   }
 
@@ -140,7 +146,10 @@ const startPeer = async ({
       active,
     )}`,
   );
-  page.on("console", (msg) => onEncodingsUpdate(msg, peerToken));
+  page.on("console", (msg) => onConsoleMessage(msg, peerToken));
+
+  // For debugging browser errors
+  // page.on('pageerror', data => console.log(`Browser has crashed: ${data}`));
 };
 
 const cleanup = async (client: Client, browsers: Array<Browser>) => {
@@ -163,10 +172,15 @@ const getEstimatedBandwidth = (args: Args) => {
   const outgoingBandwidth =
     encodingBitrate.get(args.targetEncoding)! * outgoingTracks;
 
-  let incomingBandwidth = args.availableEncodings.reduce(
-    (acc, encoding) => acc + encodingBitrate.get(encoding)! * incomingTracks,
-    0,
-  );
+  let incomingBandwidth;
+  if (args.useSimulcast) {
+    incomingBandwidth = args.availableEncodings.reduce(
+      (acc, encoding) => acc + encodingBitrate.get(encoding)! * incomingTracks,
+      0
+    );
+  } else {
+    incomingBandwidth = encodingBitrate.get(args.targetEncoding)! * incomingTracks
+  }
 
   return { incomingBandwidth, outgoingBandwidth };
 };

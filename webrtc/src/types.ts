@@ -13,6 +13,8 @@ export type Args = {
   activePeers: number;
   targetEncoding: TrackEncoding;
   availableEncodings: TrackEncoding[];
+  csvReportPath: string;
+  useSimulcast: boolean;
 };
 
 export type PeerResponse = {
@@ -45,9 +47,12 @@ export type FishjamConfig = {
   secure: boolean;
   targetEncoding: TrackEncoding;
   activeEncodings: TrackEncoding[];
+  useSimulcast: boolean;
 };
 
 export type RawTrackEncodings = Map<PeerToken, RemoteTrackEncodings>;
+export type RawRtcScores = Map<PeerToken, RemoteTrackScores>;
 
 export type PeerToken = string;
 type RemoteTrackEncodings = string;
+type RemoteTrackScores = Array<number>;

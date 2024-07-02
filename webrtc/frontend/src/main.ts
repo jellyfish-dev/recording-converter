@@ -2,6 +2,7 @@ import "./style.css";
 import "./mediaDevices.ts";
 import { FishjamClient, TrackEncoding } from "@fishjam-dev/ts-client";
 import { startDevices } from "./mediaDevices";
+import { rtc_score_callback } from "./rtcScore.ts";
 
 const startClient = () => {
   const params: QueryParams = parseQueryParams();
@@ -42,6 +43,9 @@ const startClient = () => {
     },
   });
 
+  // every second sends rtc score report to fishjam grinder using `console.log`
+  rtc_score_callback(client);
+
   return client;
 };
 
@@ -50,17 +54,28 @@ const addMediaTracks = (client: FishjamClient<PeerMetadata, TrackMetadata>) => {
 
   const activeEncodings: TrackEncoding[] = process.env.ACTIVE_ENCODINGS?.split("") as TrackEncoding[];
 
-  client.addTrack(
-    videoTrack,
-    videoMediaStream,
-    undefined,
-    { enabled: true, activeEncodings: activeEncodings, disabledEncodings: [] },
-    new Map<TrackEncoding, number>([
-      ["l", 150],
-      ["m", 500],
-      ["h", 1500],
-    ]),
-  );
+  if (process.env.USE_SIMULCAST) {
+    client.addTrack(
+      videoTrack,
+      videoMediaStream,
+      undefined,
+      { enabled: true, activeEncodings: activeEncodings, disabledEncodings: [] },
+      new Map<TrackEncoding, number>([
+        ["l", 150],
+        ["m", 500],
+        ["h", 1500],
+      ]),
+    );
+  } else {
+    client.addTrack(
+      videoTrack,
+      videoMediaStream,
+      undefined,
+      undefined,
+      500
+    );
+  }
+
   console.log("Added video");
 
   const audioTrack = audioMediaStream.getAudioTracks()?.[0];
